@@ -250,5 +250,21 @@ export default function Sidebar({ collapsed, onToggle }) {
             ) : null}
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-1.5">
-                <CheckCircle className="w-3 h-3 text-gray-400" />
-                <span className="text-xs text-gray-600">Dong
+                <CheckCircle className="w-3 h-3 text-gray-400" />                <span className="text-xs text-gray-600">Dong bo</span>
+              </div>
+              <span className="text-xs text-green-600 font-medium">Thanh cong</span>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Footer */}
+      {!collapsed && (
+        <div className="px-4 py-3 border-t border-gray-100">
+          <p className="text-xs text-gray-400 text-center">© 2026 HPCons AppTong</p>
+          <p className="text-xs text-gray-400 text-center">Phien ban 2.0.0</p>
+        </div>
+      )}
+    </aside>
+  )
+}
