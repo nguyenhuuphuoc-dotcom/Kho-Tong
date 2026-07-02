@@ -6,7 +6,7 @@ import {
   Download, Upload, Package, Box, Building2,
   Users, Shield, ChevronLeft, ChevronRight,
   Database, CheckCircle,
-  ChevronDown, ChevronUp, Layers
+  ChevronDown, ChevronUp, Layers, Bot
 } from 'lucide-react'
 import { useCongTrinh } from '../../context/CongTrinhContext'
 import { useAuth } from '../../context/AuthContext'
@@ -29,6 +29,7 @@ const groupQuanLy = {
     { icon: Package,   label: 'Ton kho',           path: '/ton-kho' },
     { icon: Box,       label: 'Danh muc hang hoa', path: '/danh-muc' },
     { icon: BarChart2, label: 'Bao cao',           path: '/bao-cao' },
+    { icon: Bot,       label: 'Nhap kho AI',       path: '/ai-reader' },
   ]
 }
 
