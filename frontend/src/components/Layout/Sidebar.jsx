@@ -6,7 +6,7 @@ import {
   Download, Upload, Package, Box, Building2,
   Users, Shield, ChevronLeft, ChevronRight,
   Database, CheckCircle,
-  ChevronDown, ChevronUp, Layers, Bot
+  ChevronDown, ChevronUp, Layers
 } from 'lucide-react'
 import { useCongTrinh } from '../../context/CongTrinhContext'
 import { useAuth } from '../../context/AuthContext'
@@ -29,7 +29,6 @@ const groupQuanLy = {
     { icon: Package,   label: 'Ton kho',           path: '/ton-kho' },
     { icon: Box,       label: 'Danh muc hang hoa', path: '/danh-muc' },
     { icon: BarChart2, label: 'Bao cao',           path: '/bao-cao' },
-    { icon: Bot,       label: 'Nhap kho AI',       path: '/ai-reader' },
   ]
 }
 
@@ -252,21 +251,4 @@ export default function Sidebar({ collapsed, onToggle }) {
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-1.5">
                 <CheckCircle className="w-3 h-3 text-gray-400" />
-                <span className="text-xs text-gray-600">Dong bo</span>
-              </div>
-              <span className="text-xs text-green-600 font-medium">Thanh cong</span>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Footer */}
-      {!collapsed && (
-        <div className="px-4 py-3 border-t border-gray-100">
-          <p className="text-xs text-gray-400 text-center">© 2026 HPCons AppTong</p>
-          <p className="text-xs text-gray-400 text-center">Phien ban 2.0.0</p>
-        </div>
-      )}
-    </aside>
-  )
-}
+                <span className="text-xs text-gray-600">Dong

@@ -133,9 +133,8 @@ export default function PhanQuyen() {
             <thead className="bg-gray-50 border-b border-gray-100">
               <tr>
                 <th className="text-left px-4 py-3 text-gray-500 font-medium w-48">Nguoi dung</th>
-                <th className="text-center px-3 py-3 text-gray-500 font-medium text-xs">Tat ca CT</th>
                 {congTrinhs.map(ct => (
-                  <th key={ct.id} className="text-center px-3 py-3 text-gray-500 font-medium text-xs max-w-[100px]">
+                  <th key={ct.id} className="text-center px-3 py-3 text-gray-500 font-medium text-xs max-w-[120px]">
                     <div className="truncate" title={ct.ten_ct}>{ct.ten_ct}</div>
                   </th>
                 ))}
@@ -145,7 +144,6 @@ export default function PhanQuyen() {
               {users.map(u => {
                 const userPerms = perms[u.id] || new Set()
                 const isCurrentAdmin = u.role === 'admin'
-                const allChecked = isCurrentAdmin || congTrinhs.every(ct => userPerms.has(ct.id))
 
                 return (
                   <tr key={u.id} className="border-b border-gray-50 hover:bg-gray-50">
@@ -155,21 +153,6 @@ export default function PhanQuyen() {
                       {isCurrentAdmin && (
                         <span className="text-[10px] bg-blue-100 text-blue-600 px-1.5 py-0.5 rounded font-semibold">ADMIN</span>
                       )}
-                    </td>
-                    {/* Tat ca CT */}
-                    <td className="text-center px-3 py-3">
-                      <input type="checkbox"
-                        checked={allChecked}
-                        disabled={isCurrentAdmin}
-                        onChange={() => {
-                          if (allChecked) {
-                            setPerms(prev => ({ ...prev, [u.id]: new Set() }))
-                          } else {
-                            setPerms(prev => ({ ...prev, [u.id]: new Set(congTrinhs.map(ct => ct.id)) }))
-                          }
-                        }}
-                        className="w-4 h-4 accent-blue-500 cursor-pointer disabled:cursor-default"
-                      />
                     </td>
                     {congTrinhs.map(ct => (
                       <td key={ct.id} className="text-center px-3 py-3">
