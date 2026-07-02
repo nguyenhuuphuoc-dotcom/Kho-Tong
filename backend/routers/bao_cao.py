@@ -52,6 +52,12 @@ def bao_cao_tong_hop(cong_trinh_id: Optional[int] = Query(None)):
             ton_kho = db.get_ton_kho_all()
         canh_bao = [r for r in ton_kho if (r.get("ton_cuoi") or 0) <= 0]
 
+        # Đếm mặt hàng từ bảng hang_hoa (đáng tin hơn view)
+        try:
+            so_mat_hang_dm = len(db.get_all_hang_hoa())
+        except Exception:
+            so_mat_hang_dm = len(ton_kho)
+
         # ── Top vật tư ───────────────────────────────────────
         # phieu_list đã lấy ở trên
         chi_tiets  = db.get_all_chi_tiet()
@@ -112,7 +118,7 @@ def bao_cao_tong_hop(cong_trinh_id: Optional[int] = Query(None)):
         return {
             "kpi": {
                 **thong_ke,
-                "so_mat_hang": len(ton_kho),
+                "so_mat_hang": so_mat_hang_dm,
                 "so_canh_bao": len(canh_bao),
             },
             "top_vat_tu_nk": top_nk,

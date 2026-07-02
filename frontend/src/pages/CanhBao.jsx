@@ -1,63 +1,144 @@
-import React from 'react'
-import { AlertTriangle } from 'lucide-react'
+import React, { useState, useEffect } from 'react'
+import { AlertTriangle, RefreshCw, Package } from 'lucide-react'
+import { getTonKho } from '../api'
+import { useCongTrinh } from '../context/CongTrinhContext'
 
-const mockCanhBao = [
-  { id: 1, vatTu: 'Thep hop 40x40', ma: 'ST001', congTrinh: 'CT Nha may A', ton: 5, minTon: 20, dvt: 'cay', mucDo: 'cao' },
-  { id: 2, vatTu: 'Xi mang PCB40', ma: 'XM004', congTrinh: 'CT Khu dan cu D', ton: 8, minTon: 50, dvt: 'bao', mucDo: 'cao' },
-  { id: 3, vatTu: 'Cat xay dung', ma: 'CT005', congTrinh: 'CT Van phong C', ton: 2, minTon: 15, dvt: 'm3', mucDo: 'cao' },
-  { id: 4, vatTu: 'Ton lanh 0.45mm', ma: 'TG002', congTrinh: 'CT Kho B', ton: 0, minTon: 10, dvt: 'm2', mucDo: 'nguy_hiem' },
-  { id: 5, vatTu: 'Be tong M200', ma: 'BT003', congTrinh: 'CT Truong hoc E', ton: 15, minTon: 30, dvt: 'm3', mucDo: 'trung_binh' },
+const MUC_DO = [
+  { label: 'Het hang',   color: 'bg-red-100 text-red-700',    check: (t) => t <= 0 },
+  { label: 'Rat thap',   color: 'bg-orange-100 text-orange-700', check: (t) => t > 0 && t <= 5 },
+  { label: 'Thap',       color: 'bg-amber-100 text-amber-700',   check: (t) => t > 5 && t <= 20 },
 ]
 
+function getMucDo(ton) {
+  for (const m of MUC_DO) if (m.check(ton)) return m
+  return null
+}
+
 export default function CanhBao() {
+  const { selectedCT } = useCongTrinh()
+  const [data, setData]       = useState([])
+  const [loading, setLoading] = useState(true)
+  const [filter, setFilter]   = useState('all') // all | het | rat_thap | thap
+
+  const loadData = () => {
+    setLoading(true)
+    const params = selectedCT ? { cong_trinh_id: selectedCT.id } : {}
+    getTonKho(params)
+      .then(res => {
+        const rows = res.data?.data || []
+        // Chỉ giữ những mặt hàng có cảnh báo (ton_cuoi <= 20)
+        const canhBao = rows
+          .filter(r => getMucDo(r.ton_cuoi ?? 0))
+          .sort((a, b) => (a.ton_cuoi ?? 0) - (b.ton_cuoi ?? 0))
+        setData(canhBao)
+      })
+      .catch(err => console.error(err))
+      .finally(() => setLoading(false))
+  }
+
+  useEffect(() => { loadData() }, [selectedCT])
+
+  const filtered = data.filter(r => {
+    const ton = r.ton_cuoi ?? 0
+    if (filter === 'het')      return ton <= 0
+    if (filter === 'rat_thap') return ton > 0 && ton <= 5
+    if (filter === 'thap')     return ton > 5 && ton <= 20
+    return true
+  })
+
+  const hetHang   = data.filter(r => (r.ton_cuoi ?? 0) <= 0).length
+  const ratThap   = data.filter(r => { const t = r.ton_cuoi ?? 0; return t > 0 && t <= 5 }).length
+  const thap      = data.filter(r => { const t = r.ton_cuoi ?? 0; return t > 5 && t <= 20 }).length
+
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-gray-800">CANH BAO TON KHO</h1>
-        <p className="text-gray-500 mt-1 text-sm">Danh sach vat tu can bo sung theo cong trinh</p>
-      </div>
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="font-semibold text-gray-800">Danh sach canh bao ({mockCanhBao.length})</h3>
-          <span className="bg-red-100 text-red-600 text-xs font-semibold px-2 py-0.5 rounded-full">{mockCanhBao.length} muc can xu ly</span>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-800">CANH BAO TON KHO</h1>
+          <p className="text-gray-500 mt-1 text-sm">Danh sach vat tu can bo sung theo cong trinh</p>
         </div>
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="border-b border-gray-100 text-gray-500 text-xs">
-              <th className="text-left py-3 font-medium">#</th>
-              <th className="text-left py-3 font-medium">Ma vat tu</th>
-              <th className="text-left py-3 font-medium">Ten vat tu</th>
-              <th className="text-left py-3 font-medium">Cong trinh</th>
-              <th className="text-right py-3 font-medium">Ton kho</th>
-              <th className="text-right py-3 font-medium">Muc toi thieu</th>
-              <th className="text-right py-3 font-medium">DVT</th>
-              <th className="text-center py-3 font-medium">Muc do</th>
-            </tr>
-          </thead>
-          <tbody>
-            {mockCanhBao.map((item, i) => (
-              <tr key={item.id} className="border-b border-gray-50 hover:bg-gray-50">
-                <td className="py-3 text-gray-400">{i + 1}</td>
-                <td className="py-3 text-blue-500 font-mono text-xs">{item.ma}</td>
-                <td className="py-3 text-gray-800 font-medium">{item.vatTu}</td>
-                <td className="py-3 text-gray-600">{item.congTrinh}</td>
-                <td className="py-3 text-right text-red-600 font-bold">{item.ton}</td>
-                <td className="py-3 text-right text-gray-500">{item.minTon}</td>
-                <td className="py-3 text-right text-gray-500">{item.dvt}</td>
-                <td className="py-3 text-center">
-                  <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${
-                    item.mucDo === 'nguy_hiem' ? 'bg-red-100 text-red-700' :
-                    item.mucDo === 'cao' ? 'bg-amber-100 text-amber-700' :
-                    'bg-yellow-100 text-yellow-700'
-                  }`}>
-                    <AlertTriangle className="w-3 h-3" />
-                    {item.mucDo === 'nguy_hiem' ? 'Nguy hiem' : item.mucDo === 'cao' ? 'Cao' : 'Trung binh'}
-                  </span>
-                </td>
+        <button onClick={loadData} disabled={loading}
+          className="p-2 border border-gray-200 rounded-lg hover:bg-gray-50 text-gray-600">
+          <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+        </button>
+      </div>
+
+      {/* Stats */}
+      <div className="grid grid-cols-4 gap-4">
+        {[
+          { label: 'Tong canh bao', value: data.length,  color: 'text-gray-800', bg: 'bg-white', active: filter === 'all',      key: 'all' },
+          { label: 'Het hang',      value: hetHang,       color: 'text-red-600',  bg: 'bg-white', active: filter === 'het',       key: 'het' },
+          { label: 'Rat thap',      value: ratThap,       color: 'text-orange-600',bg:'bg-white', active: filter === 'rat_thap',  key: 'rat_thap' },
+          { label: 'Thap',          value: thap,          color: 'text-amber-600', bg: 'bg-white', active: filter === 'thap',     key: 'thap' },
+        ].map(s => (
+          <button key={s.key} onClick={() => setFilter(s.key)}
+            className={`${s.bg} rounded-xl border p-4 text-left transition-all ${
+              s.active ? 'border-blue-400 ring-1 ring-blue-300' : 'border-gray-100 hover:border-gray-300'
+            }`}>
+            <div className="text-xs text-gray-400 mb-1">{s.label}</div>
+            <div className={`text-2xl font-bold ${s.color}`}>{s.value}</div>
+          </button>
+        ))}
+      </div>
+
+      {/* Table */}
+      <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
+          <h3 className="font-semibold text-gray-800">
+            Danh sach canh bao ({filtered.length})
+          </h3>
+          {filtered.length > 0 && (
+            <span className="bg-red-100 text-red-600 text-xs font-semibold px-2 py-0.5 rounded-full">
+              {filtered.length} muc can xu ly
+            </span>
+          )}
+        </div>
+
+        {loading ? (
+          <div className="py-16 text-center text-gray-400">Dang tai...</div>
+        ) : filtered.length === 0 ? (
+          <div className="py-16 text-center">
+            <Package className="w-12 h-12 text-gray-200 mx-auto mb-3" />
+            <div className="text-gray-400 font-medium">Khong co canh bao nao</div>
+            <div className="text-gray-300 text-sm mt-1">Tat ca vat tu deu co ton kho on dinh</div>
+          </div>
+        ) : (
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b border-gray-100 text-gray-500 text-xs bg-gray-50">
+                <th className="text-left px-4 py-3 font-medium">#</th>
+                <th className="text-left px-4 py-3 font-medium">Ten vat tu</th>
+                <th className="text-left px-4 py-3 font-medium">Nhom</th>
+                <th className="text-left px-4 py-3 font-medium">Cong trinh</th>
+                <th className="text-right px-4 py-3 font-medium">Ton kho</th>
+                <th className="text-center px-4 py-3 font-medium">Muc do</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {filtered.map((item, i) => {
+                const ton = item.ton_cuoi ?? 0
+                const mucDo = getMucDo(ton)
+                return (
+                  <tr key={i} className="border-b border-gray-50 hover:bg-gray-50">
+                    <td className="px-4 py-3 text-gray-400">{i + 1}</td>
+                    <td className="px-4 py-3 text-gray-800 font-medium">{item.ten_hang}</td>
+                    <td className="px-4 py-3 text-gray-500 text-xs">{item.nhom || '—'}</td>
+                    <td className="px-4 py-3 text-gray-500 text-xs">{item.ma_ct || '—'}</td>
+                    <td className={`px-4 py-3 text-right font-bold ${ton <= 0 ? 'text-red-600' : 'text-orange-600'}`}>
+                      {ton.toLocaleString('vi-VN')}
+                    </td>
+                    <td className="px-4 py-3 text-center">
+                      <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${mucDo.color}`}>
+                        <AlertTriangle className="w-3 h-3" />
+                        {mucDo.label}
+                      </span>
+                    </td>
+                  </tr>
+                )
+              })}
+            </tbody>
+          </table>
+        )}
       </div>
     </div>
   )
