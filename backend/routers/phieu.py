@@ -1,0 +1,120 @@
+"""
+routers/phieu.py — API endpoints cho Phiếu NK/XK
+"""
+from fastapi import APIRouter, HTTPException, Query
+from pydantic import BaseModel
+from typing import Optional, List
+import sys, os
+sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
+import supabase_client as db
+
+router = APIRouter(prefix="/api/phieu", tags=["phieu"])
+
+
+class PhieuItem(BaseModel):
+    ten_hang: str
+    dvt: Optional[str] = "cái"
+    so_luong: Optional[float] = 0
+    don_gia: Optional[float] = 0
+    thanh_tien: Optional[float] = 0
+    ghi_chu: Optional[str] = ""
+
+
+class PhieuCreate(BaseModel):
+    cong_trinh_id: int
+    loai: str                        # NK hoặc XK
+    so_phieu: str
+    ngay: str                        # YYYY-MM-DD
+    doi_tac: Optional[str] = ""
+    ghi_chu: Optional[str] = ""
+    tong_tien: Optional[float] = 0
+    items: Optional[List[PhieuItem]] = []
+
+
+@router.get("/")
+def list_phieu(
+    cong_trinh_id: Optional[int] = Query(None, description="Lọc theo công trình"),
+    loai: Optional[str] = Query(None, description="NK hoặc XK"),
+    search: Optional[str] = Query(None, description="Tìm theo số phiếu hoặc đối tác"),
+    limit: int = Query(100, ge=1, le=1000),
+    offset: int = Query(0, ge=0),
+):
+    """Lấy danh sách phiếu với filter và pagination."""
+    try:
+        rows = db.get_phieu_list(
+            cong_trinh_id=cong_trinh_id,
+            loai=loai,
+            search=search,
+            limit=limit,
+            offset=offset
+        )
+        return {"data": rows, "total": len(rows), "limit": limit, "offset": offset}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Lỗi lấy danh sách phiếu: {str(e)}")
+
+
+@router.get("/{id}/chi-tiet")
+def get_chi_tiet_phieu(id: int):
+    """Lấy chi tiết hàng hóa của 1 phiếu."""
+    try:
+        items = db.get_chi_tiet_phieu(id)
+        return {"phieu_id": id, "items": items, "total": len(items)}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Lỗi lấy chi tiết phiếu: {str(e)}")
+
+
+@router.post("/")
+def create_phieu(body: PhieuCreate):
+    """Tạo phiếu mới kèm chi tiết hàng hóa."""
+    try:
+        # Tính tổng tiền nếu chưa có
+        tong_tien = body.tong_tien or 0
+        if not tong_tien and body.items:
+            tong_tien = sum(
+                (it.thanh_tien or it.so_luong * it.don_gia)
+                for it in body.items
+            )
+
+        phieu = db.create_phieu(
+            cong_trinh_id=body.cong_trinh_id,
+            loai=body.loai,
+            so_phieu=body.so_phieu,
+            ngay=body.ngay,
+            doi_tac=body.doi_tac or "",
+            ghi_chu=body.ghi_chu or "",
+            tong_tien=tong_tien,
+            nguon="web"
+        )
+        if not phieu:
+            raise HTTPException(status_code=500, detail="Không thể tạo phiếu")
+
+        phieu_id = phieu["id"]
+
+        # Push chi tiết
+        if body.items:
+            items_data = [it.model_dump() for it in body.items]
+            for it in items_data:
+                if not it.get("thanh_tien"):
+                    it["thanh_tien"] = it["so_luong"] * it["don_gia"]
+            db.push_chi_tiet(phieu_id, items_data)
+
+        return {
+            "success": True,
+            "phieu_id": phieu_id,
+            "phieu": phieu,
+            "so_items": len(body.items) if body.items else 0
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Lỗi tạo phiếu: {str(e)}")
+
+
+@router.delete("/{id}")
+def delete_phieu(id: int):
+    """Xóa phiếu và toàn bộ chi tiết phiếu."""
+    try:
+        db.delete_phieu(id)
+        return {"success": True, "deleted_id": id}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Lỗi xóa phiếu: {str(e)}")
