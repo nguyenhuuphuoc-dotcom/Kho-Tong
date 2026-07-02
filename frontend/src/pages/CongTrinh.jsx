@@ -1,19 +1,23 @@
 import React, { useState, useEffect } from 'react'
-import { Building2, Search, RefreshCw, MapPin, Hash, FileText, ExternalLink } from 'lucide-react'
-import { useNavigate } from 'react-router-dom'
-import { getCongTrinh } from '../api'
+import { Building2, Search, RefreshCw, MapPin, Hash, FileText, Plus, Trash2, X, CheckCircle, XCircle } from 'lucide-react'
+import { api, getCongTrinh } from '../api'
+import { useCongTrinh } from '../context/CongTrinhContext'
 
 export default function CongTrinh() {
-  const [data, setData] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [search, setSearch] = useState('')
-  const navigate = useNavigate()
+  const { loadCongTrinh } = useCongTrinh()
+  const [data, setData]         = useState([])
+  const [loading, setLoading]   = useState(true)
+  const [search, setSearch]     = useState('')
+  const [showForm, setShowForm] = useState(false)
+  const [saving, setSaving]     = useState(false)
+  const [msg, setMsg]           = useState(null)
+  const [form, setForm] = useState({ ten_ct: '', ma_ct: '', dia_chi: '', ghi_chu: '' })
 
   const loadData = () => {
     setLoading(true)
     getCongTrinh()
       .then(res => setData(res.data?.data || []))
-      .catch(err => console.error(err))
+      .catch(() => setData([]))
       .finally(() => setLoading(false))
   }
 
@@ -26,77 +30,118 @@ export default function CongTrinh() {
     (ct.dia_chi || '').toLowerCase().includes(search.toLowerCase())
   )
 
+  const handleCreate = async (e) => {
+    e.preventDefault()
+    if (!form.ten_ct || !form.ma_ct) {
+      setMsg({ type: 'err', text: 'Vui long nhap Ten va Ma cong trinh' }); return
+    }
+    setSaving(true); setMsg(null)
+    try {
+      await api.post('/cong-trinh/', form)
+      setMsg({ type: 'ok', text: `Tao thanh cong: ${form.ten_ct}` })
+      setForm({ ten_ct: '', ma_ct: '', dia_chi: '', ghi_chu: '' })
+      setShowForm(false)
+      loadData()
+      loadCongTrinh()   // refresh sidebar
+    } catch (err) {
+      setMsg({ type: 'err', text: err.response?.data?.detail || 'Loi tao cong trinh' })
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const handleDelete = async (id, ten) => {
+    if (!window.confirm(`Xoa cong trinh: ${ten}?`)) return
+    try {
+      await api.delete(`/cong-trinh/${id}`)
+      setMsg({ type: 'ok', text: `Da xoa: ${ten}` })
+      loadData(); loadCongTrinh()
+    } catch (err) {
+      setMsg({ type: 'err', text: err.response?.data?.detail || 'Loi xoa cong trinh' })
+    }
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-800">DANH SACH CONG TRINH</h1>
-          <p className="text-gray-500 mt-1 text-sm">
-            {loading ? 'Dang tai...' : `${data.length} cong trinh dang quan ly`}
-          </p>
+          <p className="text-gray-500 mt-1 text-sm">{data.length} cong trinh dang quan ly</p>
         </div>
-        <button onClick={loadData} disabled={loading}
-          className="flex items-center gap-2 px-4 py-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-600 rounded-lg text-sm font-medium transition-colors disabled:opacity-50">
-          <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
-          Lam moi
-        </button>
+        <div className="flex gap-2">
+          <button onClick={loadData} disabled={loading}
+            className="p-2 border border-gray-200 rounded-lg hover:bg-gray-50 text-gray-600">
+            <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+          </button>
+          <button onClick={() => setShowForm(true)}
+            className="flex items-center gap-2 px-4 py-2 bg-teal-500 hover:bg-teal-600 text-white rounded-lg text-sm font-medium transition-colors">
+            <Plus className="w-4 h-4" />
+            Them cong trinh
+          </button>
+        </div>
       </div>
 
+      {msg && (
+        <div className={`flex items-center gap-3 p-4 rounded-xl border text-sm ${
+          msg.type === 'ok' ? 'bg-green-50 border-green-100 text-green-700' : 'bg-red-50 border-red-100 text-red-700'
+        }`}>
+          {msg.type === 'ok' ? <CheckCircle className="w-4 h-4" /> : <XCircle className="w-4 h-4" />}
+          {msg.text}
+          <button onClick={() => setMsg(null)} className="ml-auto"><X className="w-4 h-4" /></button>
+        </div>
+      )}
+
       {/* Search */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
+      <div className="bg-white rounded-xl border border-gray-100 p-4">
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
           <input value={search} onChange={e => setSearch(e.target.value)}
-            placeholder="Tim cong trinh theo ten, ma, dia chi..."
+            placeholder="Tim theo ten, ma, dia chi..."
             className="w-full pl-9 pr-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-blue-300" />
         </div>
       </div>
 
-      {/* Cards */}
+      {/* List */}
       {loading
-        ? <div className="text-center text-gray-400 py-12">Dang tai du lieu...</div>
+        ? <div className="text-center text-gray-400 py-12">Dang tai...</div>
         : filtered.length === 0
           ? <div className="text-center text-gray-400 py-12">
-              <Building2 className="w-12 h-12 mx-auto mb-3 text-gray-300" />
-              <div>Khong co cong trinh</div>
+              <Building2 className="w-12 h-12 mx-auto mb-3 text-gray-200" />
+              <div className="font-medium">Chua co cong trinh nao</div>
+              <div className="text-sm mt-1">Nhan "Them cong trinh" de tao moi</div>
             </div>
-          : <div className="grid grid-cols-1 gap-4">
+          : <div className="grid grid-cols-1 gap-3">
               {filtered.map((ct, i) => (
-                <div key={ct.id} className="bg-white rounded-xl border border-gray-100 p-5 flex items-start gap-4 hover:shadow-md transition-shadow">
-                  <div className="w-10 h-10 bg-indigo-100 rounded-xl flex items-center justify-center flex-shrink-0 font-bold text-indigo-600">
+                <div key={ct.id} className="bg-white rounded-xl border border-gray-100 p-5 flex items-start gap-4 hover:shadow-sm transition-shadow">
+                  <div className="w-10 h-10 bg-teal-100 rounded-xl flex items-center justify-center flex-shrink-0 font-bold text-teal-600 text-sm">
                     {i + 1}
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-start justify-between gap-3">
                       <div>
-                        <div className="font-bold text-gray-800 text-base">{ct.ten_ct}</div>
-                        <div className="flex items-center gap-1 mt-1">
+                        <div className="font-bold text-gray-800">{ct.ten_ct}</div>
+                        <div className="flex items-center gap-1 mt-0.5">
                           <Hash className="w-3 h-3 text-gray-400" />
                           <span className="text-xs font-mono text-gray-500">{ct.ma_ct}</span>
                         </div>
                       </div>
-                      <div className="flex items-center gap-2 flex-shrink-0">
-                        <span className="text-xs bg-green-100 text-green-700 px-2.5 py-1 rounded-full font-medium">
-                          Hoat dong
-                        </span>
-                        <button
-                          onClick={() => navigate(`/ct/${ct.id}`)}
-                          className="flex items-center gap-1.5 px-3 py-1.5 bg-teal-500 hover:bg-teal-600 text-white rounded-lg text-xs font-medium transition-colors"
-                        >
-                          <ExternalLink className="w-3 h-3" />
-                          Vao Kho
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full font-medium">Hoat dong</span>
+                        <button onClick={() => handleDelete(ct.id, ct.ten_ct)}
+                          className="p-1.5 hover:bg-red-50 text-gray-400 hover:text-red-500 rounded-lg transition-colors">
+                          <Trash2 className="w-4 h-4" />
                         </button>
                       </div>
                     </div>
                     {ct.dia_chi && (
-                      <div className="flex items-start gap-1.5 mt-2">
-                        <MapPin className="w-3.5 h-3.5 text-gray-400 flex-shrink-0 mt-0.5" />
+                      <div className="flex items-center gap-1.5 mt-1.5">
+                        <MapPin className="w-3.5 h-3.5 text-gray-400" />
                         <span className="text-sm text-gray-500">{ct.dia_chi}</span>
                       </div>
                     )}
                     {ct.ghi_chu && (
-                      <div className="flex items-start gap-1.5 mt-1.5">
-                        <FileText className="w-3.5 h-3.5 text-gray-400 flex-shrink-0 mt-0.5" />
+                      <div className="flex items-center gap-1.5 mt-1">
+                        <FileText className="w-3.5 h-3.5 text-gray-400" />
                         <span className="text-xs text-gray-400 italic">{ct.ghi_chu}</span>
                       </div>
                     )}
@@ -105,6 +150,57 @@ export default function CongTrinh() {
               ))}
             </div>
       }
+
+      {/* Modal tạo CT */}
+      {showForm && (
+        <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50 p-4"
+          onClick={e => { if (e.target === e.currentTarget) setShowForm(false) }}>
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-md p-6">
+            <div className="flex items-center justify-between mb-5">
+              <h3 className="font-bold text-gray-800 text-lg">Them cong trinh moi</h3>
+              <button onClick={() => setShowForm(false)} className="p-1 hover:bg-gray-100 rounded-lg text-gray-400">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <form onSubmit={handleCreate} className="space-y-4">
+              <div>
+                <label className="text-xs font-medium text-gray-500 mb-1.5 block">Ten cong trinh *</label>
+                <input value={form.ten_ct} onChange={e => setForm({...form, ten_ct: e.target.value})}
+                  placeholder="VD: Nha xuong Binh Duong"
+                  className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-teal-400" />
+              </div>
+              <div>
+                <label className="text-xs font-medium text-gray-500 mb-1.5 block">Ma cong trinh *</label>
+                <input value={form.ma_ct} onChange={e => setForm({...form, ma_ct: e.target.value.toUpperCase()})}
+                  placeholder="VD: CT001"
+                  className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm font-mono focus:outline-none focus:border-teal-400" />
+              </div>
+              <div>
+                <label className="text-xs font-medium text-gray-500 mb-1.5 block">Dia chi</label>
+                <input value={form.dia_chi} onChange={e => setForm({...form, dia_chi: e.target.value})}
+                  placeholder="Dia chi cong trinh..."
+                  className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-teal-400" />
+              </div>
+              <div>
+                <label className="text-xs font-medium text-gray-500 mb-1.5 block">Ghi chu</label>
+                <input value={form.ghi_chu} onChange={e => setForm({...form, ghi_chu: e.target.value})}
+                  placeholder="Ghi chu them..."
+                  className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-teal-400" />
+              </div>
+              <div className="flex gap-3 pt-2">
+                <button type="button" onClick={() => setShowForm(false)}
+                  className="flex-1 py-2.5 border border-gray-200 text-gray-600 rounded-xl text-sm hover:bg-gray-50">
+                  Huy
+                </button>
+                <button type="submit" disabled={saving}
+                  className="flex-1 py-2.5 bg-teal-500 text-white rounded-xl text-sm font-medium hover:bg-teal-600 disabled:opacity-50">
+                  {saving ? 'Dang luu...' : 'Tao cong trinh'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

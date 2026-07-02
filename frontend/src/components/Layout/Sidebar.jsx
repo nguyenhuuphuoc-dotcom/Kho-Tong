@@ -34,8 +34,9 @@ const groupQuanLy = {
 const groupHeThong = {
   label: 'HE THONG',
   items: [
-    { icon: Shield, label: 'Phan quyen',  path: '/phan-quyen' },
-    { icon: Users,  label: 'Nguoi dung', path: '/nguoi-dung' },
+    { icon: Building2, label: 'Cong trinh',  path: '/cong-trinh' },
+    { icon: Shield,    label: 'Phan quyen',  path: '/phan-quyen' },
+    { icon: Users,     label: 'Nguoi dung',  path: '/nguoi-dung' },
   ]
 }
 
