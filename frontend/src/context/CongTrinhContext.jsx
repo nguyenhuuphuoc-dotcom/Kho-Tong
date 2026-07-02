@@ -1,20 +1,32 @@
 import React, { createContext, useContext, useState, useEffect } from 'react'
-import { getCongTrinh } from '../api'
+import { api } from '../api'
 
 const CongTrinhContext = createContext(null)
 
 export function CongTrinhProvider({ children }) {
-  const [congTrinhs, setCongTrinhs] = useState([])
-  const [selectedCT, setSelectedCT] = useState(null) // null = tất cả
+  const [congTrinhs, setCongTrinhs]   = useState([])
+  const [selectedCT, setSelectedCT]   = useState(null)
+  const [isAdmin, setIsAdmin]         = useState(false)
 
-  useEffect(() => {
-    getCongTrinh()
-      .then(res => setCongTrinhs(res.data?.data || []))
+  const loadCongTrinh = () => {
+    api.get('/auth/my-congtrinh')
+      .then(res => {
+        const list = res.data?.congtrinhs || []
+        const admin = res.data?.is_admin || false
+        setCongTrinhs(list)
+        setIsAdmin(admin)
+        // User thường: tự động chọn CT đầu tiên
+        if (!admin && list.length > 0) {
+          setSelectedCT(list[0])
+        }
+      })
       .catch(() => {})
-  }, [])
+  }
+
+  useEffect(() => { loadCongTrinh() }, [])
 
   return (
-    <CongTrinhContext.Provider value={{ congTrinhs, selectedCT, setSelectedCT }}>
+    <CongTrinhContext.Provider value={{ congTrinhs, selectedCT, setSelectedCT, isAdmin, loadCongTrinh }}>
       {children}
     </CongTrinhContext.Provider>
   )
@@ -22,6 +34,6 @@ export function CongTrinhProvider({ children }) {
 
 export function useCongTrinh() {
   const ctx = useContext(CongTrinhContext)
-  if (!ctx) return { congTrinhs: [], selectedCT: null, setSelectedCT: () => {} }
+  if (!ctx) return { congTrinhs: [], selectedCT: null, setSelectedCT: () => {}, isAdmin: false }
   return ctx
 }

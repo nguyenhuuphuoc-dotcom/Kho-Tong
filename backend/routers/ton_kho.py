@@ -28,9 +28,9 @@ def get_ton_kho(
         raise HTTPException(status_code=500, detail=f"Lỗi lấy tồn kho: {str(e)}")
 
 
-@router.get("/lich-su/{ten_hang}")
+@router.get("/lich-su")
 def get_lich_su_hang(
-    ten_hang: str,
+    ten_hang: str = Query(..., description="Tên hàng cần xem lịch sử"),
     cong_trinh_id: Optional[int] = Query(None),
     limit: int = Query(200, ge=1, le=2000),
 ):

@@ -8,6 +8,7 @@ import {
   ChevronDown, ChevronUp, Layers
 } from 'lucide-react'
 import { useCongTrinh } from '../../context/CongTrinhContext'
+import { useAuth } from '../../context/AuthContext'
 
 // ── Menu tĩnh ─────────────────────────────────────────────────
 const groupTongQuan = {
@@ -46,7 +47,9 @@ const CT_COLORS = [
 
 export default function Sidebar({ collapsed, onToggle }) {
   const location  = useLocation()
-  const { congTrinhs, selectedCT, setSelectedCT } = useCongTrinh()
+  const { congTrinhs, selectedCT, setSelectedCT, isAdmin } = useCongTrinh()
+  const { user } = useAuth()
+  const isAdminUser = user?.role === 'admin' || isAdmin
   const [ctCollapsed, setCtCollapsed] = useState(false)
 
   const isActive = (path) => {
@@ -127,8 +130,8 @@ export default function Sidebar({ collapsed, onToggle }) {
       {/* Menu */}
       <div className="flex-1 overflow-y-auto py-1 scrollbar-thin">
 
-        {/* I. TONG QUAN */}
-        {renderGroup(groupTongQuan)}
+        {/* I. TONG QUAN — chỉ admin */}
+        {isAdminUser && renderGroup(groupTongQuan)}
 
         {/* II. DANH SACH CONG TRINH */}
         <div className="mb-1">
@@ -146,8 +149,8 @@ export default function Sidebar({ collapsed, onToggle }) {
           )}
           {collapsed && <div className="border-t border-gray-100 mx-2 my-2" />}
 
-          {/* Nút "Tất cả" */}
-          {!ctCollapsed && (
+          {/* Nút "Tất cả" — chỉ admin */}
+          {!ctCollapsed && isAdminUser && (
             <button
               onClick={() => setSelectedCT(null)}
               title={collapsed ? 'Tat ca cong trinh' : undefined}
@@ -206,8 +209,8 @@ export default function Sidebar({ collapsed, onToggle }) {
         {/* III. QUAN LY DU LIEU */}
         {renderGroup(groupQuanLy)}
 
-        {/* IV. HE THONG */}
-        {renderGroup(groupHeThong)}
+        {/* IV. HE THONG — chỉ admin */}
+        {isAdminUser && renderGroup(groupHeThong)}
 
       </div>
 

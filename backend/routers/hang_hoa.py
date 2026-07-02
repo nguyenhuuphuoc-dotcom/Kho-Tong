@@ -50,7 +50,7 @@ def list_hang_hoa(
 def create_hang_hoa(body: HangHoaCreate):
     """Tạo mặt hàng mới."""
     try:
-        row = db.create_hang_hoa(body.dict())
+        row = db.create_hang_hoa(body.model_dump())
         if not row:
             raise HTTPException(status_code=500, detail="Không thể tạo mặt hàng")
         return row
@@ -65,7 +65,7 @@ def update_hang_hoa(ma_hang: str, body: HangHoaUpdate):
     """Cập nhật mặt hàng theo mã hàng."""
     try:
         # Chỉ update các trường được cung cấp (không None)
-        data = {k: v for k, v in body.dict().items() if v is not None}
+        data = {k: v for k, v in body.model_dump(exclude_unset=True).items() if v is not None}
         if not data:
             raise HTTPException(status_code=400, detail="Không có trường nào để cập nhật")
         row = db.update_hang_hoa(ma_hang, data)

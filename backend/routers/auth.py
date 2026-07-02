@@ -12,7 +12,9 @@ import supabase_client as db
 
 router = APIRouter(prefix="/api/auth", tags=["auth"])
 
-JWT_SECRET = os.getenv("JWT_SECRET", "hpcons-apptong-secret-2026")
+JWT_SECRET = os.getenv("JWT_SECRET", "")
+if not JWT_SECRET:
+    raise RuntimeError("Thiếu JWT_SECRET trong .env")
 
 
 # ── Password ──────────────────────────────────────────────────
@@ -197,6 +199,30 @@ def delete_user(user_id: int, authorization: Optional[str] = Header(None)):
         raise HTTPException(status_code=500, detail=str(e))
 
 
+@router.get("/my-congtrinh")
+def my_congtrinh(authorization: Optional[str] = Header(None)):
+    """Lay danh sach cong trinh cua user dang dang nhap."""
+    if not authorization or not authorization.startswith("Bearer "):
+        raise HTTPException(status_code=401, detail="Chua dang nhap")
+    token_data = verify_token(authorization.split(" ", 1)[1])
+    if not token_data:
+        raise HTTPException(status_code=401, detail="Token het han")
+    uid  = token_data.get("uid")
+    role = token_data.get("role")
+    if role == "admin":
+        cts = db.select("cong_trinh", order="id.asc")
+        return {"congtrinhs": cts, "is_admin": True}
+    perms  = db.select("user_congtrinh", filters=f"user_id=eq.{uid}")
+    ct_ids = [p["cong_trinh_id"] for p in perms]
+    if not ct_ids:
+        return {"congtrinhs": [], "is_admin": False}
+    ct_list = []
+    for ct_id in ct_ids:
+        rows = db.select("cong_trinh", filters=f"id=eq.{ct_id}")
+        ct_list.extend(rows)
+    return {"congtrinhs": ct_list, "is_admin": False}
+
+
 @router.post("/create-user")
 def create_user(body: CreateUserBody, authorization: Optional[str] = Header(None)):
     """
@@ -204,7 +230,7 @@ def create_user(body: CreateUserBody, authorization: Optional[str] = Header(None
     - Lần đầu (chưa có user nào): dùng setup_key = 'HPCONS_SETUP_2026'
     - Sau đó: chỉ admin mới tạo được
     """
-    SETUP_KEY = os.getenv("SETUP_KEY", "HPCONS_SETUP_2026")
+    SETUP_KEY = os.getenv("SETUP_KEY", "")
 
     # Kiểm tra quyền
     existing = db.select("app_users")
