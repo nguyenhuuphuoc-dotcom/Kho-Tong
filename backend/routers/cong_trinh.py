@@ -42,20 +42,20 @@ def get_cong_trinh(id: int):
         raise HTTPException(status_code=500, detail=f"Lỗi lấy công trình: {str(e)}")
 
 
-@router.post("/")
-def create_cong_trinh(body: CongTrinhCreate):
-    """Tạo hoặc cập nhật công trình."""
+@router.delete("/{id}")
+def delete_cong_trinh(id: int):
+    """Xóa công trình theo id."""
     try:
-        row = db.upsert_cong_trinh(
-            ma_ct=body.ma_ct,
-            ten_ct=body.ten_ct,
-            dia_chi=body.dia_chi or "",
-            ghi_chu=body.ghi_chu or ""
-        )
-        if not row:
-            raise HTTPException(status_code=500, detail="Không thể tạo công trình")
-        return row
+        existing = db.select("cong_trinh", filters=f"id=eq.{id}")
+        if not existing:
+            raise HTTPException(status_code=404, detail=f"Không tìm thấy công trình id={id}")
+        db.delete("cong_trinh", f"id=eq.{id}")
+        return {"success": True, "id": id}
     except HTTPException:
         raise
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Lỗi tạo công trình: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Lỗi xóa công trình: {str(e)}")
+
+
+@router.post("/")
+def create_cong_trinh(body: CongTrinhC
