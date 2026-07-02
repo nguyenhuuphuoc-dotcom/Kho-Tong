@@ -1,3 +1,4 @@
+// Sidebar v2.1 - non-admin chi thay QUAN LY DU LIEU
 import React, { useState } from 'react'
 import { NavLink, useLocation } from 'react-router-dom'
 import {
@@ -13,7 +14,7 @@ import { useAuth } from '../../context/AuthContext'
 // ── Menu tĩnh ─────────────────────────────────────────────────
 const groupTongQuan = {
   label: 'TONG QUAN',
-  keep: true, // giữ nguyên, xử lý sau
+  keep: true,
   items: [
     { icon: BarChart2, label: 'Bao cao tong hop', path: '/' },
     { icon: Bell,      label: 'Canh bao',         path: '/canh-bao', badge: true },
@@ -23,31 +24,30 @@ const groupTongQuan = {
 const groupQuanLy = {
   label: 'QUAN LY DU LIEU',
   items: [
-    { icon: Upload,   label: 'Xuat kho',          path: '/phieu-xuat' },
-    { icon: Download, label: 'Nhap kho',           path: '/phieu-nhap' },
-    { icon: Package,  label: 'Ton kho',            path: '/ton-kho' },
-    { icon: Box,      label: 'Danh muc hang hoa',  path: '/danh-muc' },
-    { icon: BarChart2,label: 'Bao cao',            path: '/bao-cao' },
+    { icon: Upload,    label: 'Xuat kho',         path: '/phieu-xuat' },
+    { icon: Download,  label: 'Nhap kho',          path: '/phieu-nhap' },
+    { icon: Package,   label: 'Ton kho',           path: '/ton-kho' },
+    { icon: Box,       label: 'Danh muc hang hoa', path: '/danh-muc' },
+    { icon: BarChart2, label: 'Bao cao',           path: '/bao-cao' },
   ]
 }
 
 const groupHeThong = {
   label: 'HE THONG',
   items: [
-    { icon: Building2, label: 'Cong trinh',  path: '/cong-trinh' },
-    { icon: Shield,    label: 'Phan quyen',  path: '/phan-quyen' },
-    { icon: Users,     label: 'Nguoi dung',  path: '/nguoi-dung' },
+    { icon: Building2, label: 'Cong trinh', path: '/cong-trinh' },
+    { icon: Shield,    label: 'Phan quyen', path: '/phan-quyen' },
+    { icon: Users,     label: 'Nguoi dung', path: '/nguoi-dung' },
   ]
 }
 
-// ── Màu theo index công trình ──────────────────────────────────
 const CT_COLORS = [
   'bg-teal-500', 'bg-blue-500', 'bg-purple-500', 'bg-orange-500',
   'bg-pink-500', 'bg-green-600', 'bg-indigo-500', 'bg-red-500',
 ]
 
 export default function Sidebar({ collapsed, onToggle }) {
-  const location  = useLocation()
+  const location = useLocation()
   const { congTrinhs, selectedCT, setSelectedCT, isAdmin } = useCongTrinh()
   const { user } = useAuth()
   const isAdminUser = user?.role === 'admin' || isAdmin
@@ -131,86 +131,87 @@ export default function Sidebar({ collapsed, onToggle }) {
       {/* Menu */}
       <div className="flex-1 overflow-y-auto py-1 scrollbar-thin">
 
-        {/* I. TONG QUAN — chỉ admin */}
+        {/* Admin: TONG QUAN */}
         {isAdminUser && renderGroup(groupTongQuan)}
 
-        {/* II. DANH SACH CONG TRINH */}
-        <div className="mb-1">
-          {!collapsed && (
-            <button
-              onClick={() => setCtCollapsed(!ctCollapsed)}
-              className="w-full flex items-center justify-between px-4 pt-3 pb-1 group"
-            >
-              <span className="text-[10px] font-bold text-gray-400 tracking-widest uppercase">Danh sach cong trinh</span>
-              {ctCollapsed
-                ? <ChevronDown className="w-3 h-3 text-gray-400" />
-                : <ChevronUp className="w-3 h-3 text-gray-400" />
-              }
-            </button>
-          )}
-          {collapsed && <div className="border-t border-gray-100 mx-2 my-2" />}
-
-          {/* Nút "Tất cả" — chỉ admin */}
-          {!ctCollapsed && isAdminUser && (
-            <button
-              onClick={() => setSelectedCT(null)}
-              title={collapsed ? 'Tat ca cong trinh' : undefined}
-              className={`w-full flex items-center gap-3 mx-2 px-3 py-2 rounded-lg text-sm transition-all duration-150 relative group
-                ${selectedCT === null
-                  ? 'bg-blue-50 text-blue-700 font-semibold border-l-[3px] border-blue-500'
-                  : 'text-gray-600 hover:bg-gray-50 hover:text-gray-800 border-l-[3px] border-transparent'
-                }`}
-              style={{ width: 'calc(100% - 16px)' }}
-            >
-              <div className="w-5 h-5 bg-gray-400 rounded flex items-center justify-center flex-shrink-0">
-                <Layers className="w-3 h-3 text-white" />
-              </div>
-              {!collapsed && <span className="flex-1 truncate text-left font-medium">Tat ca cong trinh</span>}
-              {collapsed && (
-                <div className="absolute left-full ml-2 px-2 py-1 bg-gray-800 text-white text-xs rounded whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none z-50">
-                  Tat ca cong trinh
-                </div>
-              )}
-            </button>
-          )}
-
-          {!ctCollapsed && congTrinhs.map((ct, i) => {
-            const colorClass = CT_COLORS[i % CT_COLORS.length]
-            const active = selectedCT?.id === ct.id
-            return (
+        {/* Admin only: DANH SACH CONG TRINH */}
+        {isAdminUser && (
+          <div className="mb-1">
+            {!collapsed && (
               <button
-                key={ct.id}
-                onClick={() => setSelectedCT(ct)}
-                title={collapsed ? ct.ten_ct : undefined}
+                onClick={() => setCtCollapsed(!ctCollapsed)}
+                className="w-full flex items-center justify-between px-4 pt-3 pb-1 group"
+              >
+                <span className="text-[10px] font-bold text-gray-400 tracking-widest uppercase">Danh sach cong trinh</span>
+                {ctCollapsed
+                  ? <ChevronDown className="w-3 h-3 text-gray-400" />
+                  : <ChevronUp className="w-3 h-3 text-gray-400" />
+                }
+              </button>
+            )}
+            {collapsed && <div className="border-t border-gray-100 mx-2 my-2" />}
+
+            {!ctCollapsed && (
+              <button
+                onClick={() => setSelectedCT(null)}
+                title={collapsed ? 'Tat ca cong trinh' : undefined}
                 className={`w-full flex items-center gap-3 mx-2 px-3 py-2 rounded-lg text-sm transition-all duration-150 relative group
-                  ${active
-                    ? 'bg-teal-50 text-teal-700 font-semibold border-l-[3px] border-teal-500'
+                  ${selectedCT === null
+                    ? 'bg-blue-50 text-blue-700 font-semibold border-l-[3px] border-blue-500'
                     : 'text-gray-600 hover:bg-gray-50 hover:text-gray-800 border-l-[3px] border-transparent'
                   }`}
                 style={{ width: 'calc(100% - 16px)' }}
               >
-                <div className={`w-5 h-5 ${colorClass} rounded flex items-center justify-center flex-shrink-0`}>
-                  <span className="text-white text-[9px] font-bold">{i + 1}</span>
+                <div className="w-5 h-5 bg-gray-400 rounded flex items-center justify-center flex-shrink-0">
+                  <Layers className="w-3 h-3 text-white" />
                 </div>
-                {!collapsed && <span className="flex-1 truncate text-left">{ct.ten_ct}</span>}
+                {!collapsed && <span className="flex-1 truncate text-left font-medium">Tat ca cong trinh</span>}
                 {collapsed && (
-                  <div className="absolute left-full ml-2 px-2 py-1 bg-gray-800 text-white text-xs rounded whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none z-50 transition-opacity">
-                    {ct.ten_ct}
+                  <div className="absolute left-full ml-2 px-2 py-1 bg-gray-800 text-white text-xs rounded whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none z-50">
+                    Tat ca cong trinh
                   </div>
                 )}
               </button>
-            )
-          })}
+            )}
 
-          {!ctCollapsed && congTrinhs.length === 0 && !collapsed && (
-            <div className="mx-2 px-3 py-2 text-xs text-gray-400 italic">Chua co cong trinh</div>
-          )}
-        </div>
+            {!ctCollapsed && congTrinhs.map((ct, i) => {
+              const colorClass = CT_COLORS[i % CT_COLORS.length]
+              const active = selectedCT?.id === ct.id
+              return (
+                <button
+                  key={ct.id}
+                  onClick={() => setSelectedCT(ct)}
+                  title={collapsed ? ct.ten_ct : undefined}
+                  className={`w-full flex items-center gap-3 mx-2 px-3 py-2 rounded-lg text-sm transition-all duration-150 relative group
+                    ${active
+                      ? 'bg-teal-50 text-teal-700 font-semibold border-l-[3px] border-teal-500'
+                      : 'text-gray-600 hover:bg-gray-50 hover:text-gray-800 border-l-[3px] border-transparent'
+                    }`}
+                  style={{ width: 'calc(100% - 16px)' }}
+                >
+                  <div className={`w-5 h-5 ${colorClass} rounded flex items-center justify-center flex-shrink-0`}>
+                    <span className="text-white text-[9px] font-bold">{i + 1}</span>
+                  </div>
+                  {!collapsed && <span className="flex-1 truncate text-left">{ct.ten_ct}</span>}
+                  {collapsed && (
+                    <div className="absolute left-full ml-2 px-2 py-1 bg-gray-800 text-white text-xs rounded whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none z-50 transition-opacity">
+                      {ct.ten_ct}
+                    </div>
+                  )}
+                </button>
+              )
+            })}
 
-        {/* III. QUAN LY DU LIEU */}
+            {!ctCollapsed && congTrinhs.length === 0 && !collapsed && (
+              <div className="mx-2 px-3 py-2 text-xs text-gray-400 italic">Chua co cong trinh</div>
+            )}
+          </div>
+        )}
+
+        {/* Tat ca: QUAN LY DU LIEU */}
         {renderGroup(groupQuanLy)}
 
-        {/* IV. HE THONG — chỉ admin */}
+        {/* Admin: HE THONG */}
         {isAdminUser && renderGroup(groupHeThong)}
 
       </div>
@@ -230,14 +231,23 @@ export default function Sidebar({ collapsed, onToggle }) {
                 <span className="text-xs text-green-600 font-medium">Online</span>
               </div>
             </div>
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-1.5">
-                <Building2 className="w-3 h-3 text-gray-400" />
-                <span className="text-xs text-gray-600">App con</span>
+            {isAdminUser ? (
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-1.5">
+                  <Building2 className="w-3 h-3 text-gray-400" />
+                  <span className="text-xs text-gray-600">App con</span>
+                </div>
+                <span className="text-xs text-teal-600 font-medium">{congTrinhs.length} cong trinh</span>
               </div>
-              <span className="text-xs text-teal-600 font-medium">{congTrinhs.length} cong trinh</span>
-
-            </div>
+            ) : selectedCT ? (
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-1.5">
+                  <Building2 className="w-3 h-3 text-gray-400" />
+                  <span className="text-xs text-gray-600">Cong trinh</span>
+                </div>
+                <span className="text-xs text-teal-600 font-medium truncate max-w-[110px]">{selectedCT.ten_ct}</span>
+              </div>
+            ) : null}
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-1.5">
                 <CheckCircle className="w-3 h-3 text-gray-400" />
