@@ -6,7 +6,7 @@ import {
   Download, Upload, Package, Box, Building2,
   Users, Shield, ChevronLeft, ChevronRight,
   Database, CheckCircle,
-  ChevronDown, ChevronUp, Layers
+  ChevronDown, ChevronUp, Layers, FileUp
 } from 'lucide-react'
 import { useCongTrinh } from '../../context/CongTrinhContext'
 import { useAuth } from '../../context/AuthContext'
@@ -29,6 +29,7 @@ const groupQuanLy = {
     { icon: Package,   label: 'Ton kho',           path: '/ton-kho' },
     { icon: Box,       label: 'Danh muc hang hoa', path: '/danh-muc' },
     { icon: BarChart2, label: 'Bao cao',           path: '/bao-cao' },
+    { icon: FileUp,    label: 'Input du lieu',     path: '/input-data', adminOnly: true },
   ]
 }
 
@@ -66,7 +67,7 @@ export default function Sidebar({ collapsed, onToggle }) {
         </div>
       )}
       {collapsed && <div className="border-t border-gray-100 mx-2 my-2" />}
-      {group.items.map((item) => {
+      {group.items.filter(item => !item.adminOnly || isAdminUser).map((item) => {
         const Icon = item.icon
         const active = isActive(item.path)
         return (

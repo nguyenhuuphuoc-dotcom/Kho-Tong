@@ -18,6 +18,7 @@ import CaiDat from './pages/CaiDat'
 import CanhBao from './pages/CanhBao'
 import PhanQuyen from './pages/PhanQuyen'
 import NguoiDung from './pages/NguoiDung'
+import ImportData from './pages/ImportData'
 import Login from './pages/Login'
 
 // Web Con layout + pages
@@ -72,6 +73,7 @@ export default function App() {
           <Route path="canh-bao"    element={<CanhBao />} />
           <Route path="phan-quyen"  element={<PhanQuyen />} />
           <Route path="nguoi-dung"  element={<NguoiDung />} />
+          <Route path="input-data"  element={<ImportData />} />
         </Route>
 
         {/* ── Web Con (theo id cong trinh) ── */}
