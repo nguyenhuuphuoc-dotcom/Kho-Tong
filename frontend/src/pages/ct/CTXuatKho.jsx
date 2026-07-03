@@ -3,6 +3,7 @@ import { useOutletContext, useParams } from 'react-router-dom'
 import { Upload, Search, RefreshCw, Eye, Plus, X, Trash2, FileDown } from 'lucide-react'
 import { getPhieuList, getChiTietPhieu, createPhieu, getHangHoa } from '../../api'
 import { exportPhieuList } from '../../utils/exportExcel'
+import { useAuth } from '../../context/AuthContext'
 
 const fmt = (n) => (n ?? 0).toLocaleString('vi-VN')
 function formatVND(n) {
@@ -18,6 +19,7 @@ export default function CTXuatKho() {
   const { ctId } = useOutletContext() || {}
   const { id } = useParams()
   const realId = ctId || id
+  const { user } = useAuth()
 
   const [phieuList, setPhieuList] = useState([])
   const [loading, setLoading] = useState(true)
@@ -98,6 +100,7 @@ export default function CTXuatKho() {
         doi_tac: form.doi_tac,
         ghi_chu: form.ghi_chu,
         tong_tien: tongTien,
+        user_email: user?.email || '',
         items: validItems.map(it => ({
           ten_hang: it.ten_hang,
           dvt: it.dvt || 'cai',

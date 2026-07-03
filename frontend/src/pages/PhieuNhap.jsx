@@ -121,6 +121,7 @@ export default function PhieuNhap() {
         doi_tac: form.doi_tac.trim(),
         ghi_chu: form.ghi_chu.trim(),
         tong_tien: tongItems,
+        user_email: user?.email || '',
         items: validItems.map(it => ({
           ...it,
           so_luong: parseFloat(it.so_luong) || 0,

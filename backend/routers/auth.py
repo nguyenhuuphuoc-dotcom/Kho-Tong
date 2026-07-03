@@ -94,6 +94,13 @@ def login(body: LoginBody):
         if not verify_password(body.password, user["password_hash"]):
             raise HTTPException(status_code=401, detail="Email hoac mat khau khong dung")
         token = create_token(user)
+        db.log_activity(
+            action="login",
+            entity_type="user",
+            entity_id=str(user["id"]),
+            details=f"Dang nhap: {user['email']} | Role: {user.get('role', 'user')}",
+            user_email=user["email"],
+        )
         return {
             "access_token": token,
             "token_type":   "bearer",
