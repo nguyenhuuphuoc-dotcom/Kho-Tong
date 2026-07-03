@@ -18,8 +18,8 @@ export default function DanhMuc() {
 
   const loadData = () => {
     setLoading(true)
+    // Danh muc hang hoa la catalog chung, khong filter theo CT
     const params = { limit: 2000 }
-    if (selectedCT) params.cong_trinh_id = selectedCT.id
     getHangHoa(params)
       .then(res => {
         setData(res.data?.data || [])

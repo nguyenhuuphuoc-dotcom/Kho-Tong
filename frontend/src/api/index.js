@@ -19,26 +19,26 @@ export const deleteCongTrinh = (id) => api.delete(`/cong-trinh/${id}`)
 export const updateCongTrinhStatus = (id, trang_thai) => api.put(`/cong-trinh/${id}/trang-thai`, { trang_thai })
 
 // Phieu
-export const getPhieuList = (params) => api.get('/phieu', { params })
+export const getPhieuList = (params) => api.get('/phieu/', { params })
 export const getChiTietPhieu = (id) => api.get(`/phieu/${id}/chi-tiet`)
 export const createPhieu = (data) => api.post('/phieu/', data)
 export const deletePhieu = (id, userEmail = '') => api.delete(`/phieu/${id}`, { params: { user_email: userEmail } })
 
 // Hang hoa
-export const getHangHoa = (params) => api.get('/hang-hoa', { params })
+export const getHangHoa = (params) => api.get('/hang-hoa/', { params })
 export const createHangHoa = (data) => api.post('/hang-hoa/', data)
 export const updateHangHoa = (ma, data) => api.put(`/hang-hoa/${ma}`, data)
 export const deleteHangHoa = (ma) => api.delete(`/hang-hoa/${ma}`)
 
 // Ton kho
-export const getTonKho = (params) => api.get('/ton-kho', { params })
+export const getTonKho = (params) => api.get('/ton-kho/', { params })
 
 // Bao cao
 export const getBaoCaoTongHop = (params) => api.get('/bao-cao/tong-hop', { params })
 export const getBieuDo = (params) => api.get('/bao-cao/bieu-do', { params })
 
 // Nhat ky hoat dong
-export const getNhatKy = (params) => api.get('/nhat-ky', { params })
+export const getNhatKy = (params) => api.get('/nhat-ky/', { params })
 export const logActivity = (data) => api.post('/nhat-ky/log', data)
 
 // AI
