@@ -4,7 +4,7 @@ import { Bell, HelpCircle, Calendar, Download, ChevronRight, Home, LogOut, Loade
 import { useAuth } from '../../context/AuthContext'
 import { useCongTrinh } from '../../context/CongTrinhContext'
 import { getPhieuList, getTonKho } from '../../api'
-import { exportBaoCaoTongHop } from '../../utils/exportExcel'
+import { exportBaoCaoTongHop, exportPhieuList } from '../../utils/exportExcel'
 
 const routeNames = {
   '/':             'Bao cao tong hop',
@@ -77,30 +77,56 @@ export default function Header({ notificationCount = 5 }) {
     navigate('/login')
   }
 
+  const exportLabel = location.pathname === '/phieu-nhap'
+    ? 'Xuat NK'
+    : location.pathname === '/phieu-xuat'
+      ? 'Xuat XK'
+      : 'Xuat bao cao'
+
   const handleExport = async () => {
     setExporting(true)
     try {
       const ctId   = selectedCT?.id
       const params = { limit: 2000 }
-      if (ctId)    params.cong_trinh_id = ctId
+      if (ctId)     params.cong_trinh_id = ctId
       if (dateFrom) params.date_from = dateFrom
       if (dateTo)   params.date_to   = dateTo
 
-      const [resNK, resXK, resTK] = await Promise.all([
-        getPhieuList({ ...params, loai: 'NK' }),
-        getPhieuList({ ...params, loai: 'XK' }),
-        getTonKho(ctId ? { cong_trinh_id: ctId } : {}),
-      ])
+      const path = location.pathname
 
-      await exportBaoCaoTongHop({
-        nkList:     resNK.data?.data || [],
-        xkList:     resXK.data?.data || [],
-        tonKhoList: resTK.data?.data || [],
-        ctName:     selectedCT?.ten_ct || '',
-        dateFrom,
-        dateTo,
-        congTrinhs,
-      })
+      if (path === '/phieu-nhap') {
+        // Chỉ xuất NK
+        const res = await getPhieuList({ ...params, loai: 'NK' })
+        await exportPhieuList({
+          phieuList: res.data?.data || [],
+          loai: 'NK',
+          ctName:   selectedCT?.ten_ct || '',
+          dateFrom, dateTo, congTrinhs,
+        })
+      } else if (path === '/phieu-xuat') {
+        // Chỉ xuất XK
+        const res = await getPhieuList({ ...params, loai: 'XK' })
+        await exportPhieuList({
+          phieuList: res.data?.data || [],
+          loai: 'XK',
+          ctName:   selectedCT?.ten_ct || '',
+          dateFrom, dateTo, congTrinhs,
+        })
+      } else {
+        // Xuất full báo cáo tổng hợp (NK + XK + Tồn kho)
+        const [resNK, resXK, resTK] = await Promise.all([
+          getPhieuList({ ...params, loai: 'NK' }),
+          getPhieuList({ ...params, loai: 'XK' }),
+          getTonKho(ctId ? { cong_trinh_id: ctId } : {}),
+        ])
+        await exportBaoCaoTongHop({
+          nkList:     resNK.data?.data || [],
+          xkList:     resXK.data?.data || [],
+          tonKhoList: resTK.data?.data || [],
+          ctName:     selectedCT?.ten_ct || '',
+          dateFrom, dateTo, congTrinhs,
+        })
+      }
     } catch (e) {
       alert('Loi xuat bao cao: ' + (e.message || 'Thu lai.'))
     } finally {
@@ -211,7 +237,7 @@ export default function Header({ notificationCount = 5 }) {
           {exporting
             ? <Loader className="w-4 h-4 animate-spin" />
             : <Download className="w-4 h-4" />}
-          <span>{exporting ? 'Dang xuat...' : 'Xuat bao cao'}</span>
+          <span>{exporting ? 'Dang xuat...' : exportLabel}</span>
         </button>
 
         <div className="w-px h-6 bg-gray-200" />
