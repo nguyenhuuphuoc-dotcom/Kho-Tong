@@ -169,17 +169,30 @@ def delete_phieu(phieu_id: int):
 # ── Danh mục hàng hóa ────────────────────────────────────────
 
 def get_all_hang_hoa(cong_trinh_id: int = None, search: str = None,
-                     limit: int = 2000, offset: int = 0) -> list:
-    """Lấy danh mục hàng hóa từ Supabase với pagination và filter."""
-    filters = f"limit={limit}&offset={offset}"
+                     limit: int = 10000, offset: int = 0) -> list:
+    """Lấy danh mục hàng hóa từ Supabase với pagination đầy đủ (vượt giới hạn 1000/page)."""
+    # Build filter suffix cho CT và search
+    extra = ""
     if cong_trinh_id:
-        filters += f"&cong_trinh_id=eq.{cong_trinh_id}"
+        extra += f"&cong_trinh_id=eq.{cong_trinh_id}"
     if search:
-        filters += f"&or=(ten_hang.ilike.*{search}*,ma_hang.ilike.*{search}*)"
-    return select("hang_hoa",
-                  query="ma_hang,ten_hang,dvt,nhom,cong_trinh_id",
-                  filters=filters,
-                  order="nhom.asc,ten_hang.asc")
+        extra += f"&or=(ten_hang.ilike.*{search}*,ma_hang.ilike.*{search}*)"
+
+    # Phân trang để vượt giới hạn 1000 rows/request của PostgREST
+    page_size = 1000
+    all_rows  = []
+    cur_offset = offset
+    while True:
+        filters = f"limit={page_size}&offset={cur_offset}{extra}"
+        rows = select("hang_hoa",
+                      query="ma_hang,ten_hang,dvt,nhom,cong_trinh_id",
+                      filters=filters,
+                      order="nhom.asc,ten_hang.asc")
+        all_rows.extend(rows)
+        if len(rows) < page_size or len(all_rows) >= limit:
+            break
+        cur_offset += page_size
+    return all_rows[:limit]
 
 
 def create_hang_hoa(data: dict) -> Optional[dict]:
