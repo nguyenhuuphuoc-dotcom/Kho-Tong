@@ -294,6 +294,47 @@ def get_lich_su(phieu_list: list, limit: int = 20000) -> list:
     return result[:limit]
 
 
+# ── Nhật ký hoạt động ────────────────────────────────────────
+
+def log_activity(
+    action: str,
+    entity_type: str = "phieu",
+    entity_id: str = "",
+    details: str = "",
+    user_email: str = "",
+    cong_trinh_id=None,
+):
+    """Ghi nhật ký hành động. Không throw exception để không ảnh hưởng luồng chính."""
+    try:
+        data: dict = {
+            "action": action,
+            "entity_type": entity_type,
+            "entity_id": str(entity_id) if entity_id else "",
+            "details": details,
+            "user_email": user_email or "",
+        }
+        if cong_trinh_id:
+            data["cong_trinh_id"] = int(cong_trinh_id)
+        insert("activity_log", data)
+    except Exception:
+        pass  # Log thất bại không được làm hỏng API chính
+
+
+def get_activity_log(limit: int = 100, offset: int = 0,
+                     action: Optional[str] = None,
+                     cong_trinh_id: Optional[int] = None) -> list:
+    """Lấy danh sách nhật ký hoạt động, mới nhất trước."""
+    filters = f"limit={limit}&offset={offset}"
+    if action:
+        filters += f"&action=eq.{action}"
+    if cong_trinh_id:
+        filters += f"&cong_trinh_id=eq.{cong_trinh_id}"
+    try:
+        return select("activity_log", query="*", filters=filters, order="created_at.desc")
+    except Exception:
+        return []
+
+
 # ── Test kết nối ─────────────────────────────────────────────
 
 def test_connection() -> tuple[bool, str]:

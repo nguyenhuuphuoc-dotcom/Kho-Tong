@@ -7,10 +7,121 @@ ChartJS.register(...registerables)
 import {
   Building2, Download, Upload, Package, DollarSign, AlertTriangle,
   ArrowRight, Database, Smartphone, RefreshCw, Monitor, AlertCircle,
-  CheckCircle, RotateCcw
+  CheckCircle, RotateCcw, StickyNote, Plus, Trash2, X
 } from 'lucide-react'
 import { getBaoCaoTongHop, getBieuDo } from '../api'
 import { useCongTrinh } from '../context/CongTrinhContext'
+
+// ── Màu ghi chú ──────────────────────────────────────────────
+const NOTE_COLORS = [
+  { key: 'yellow', bg: 'bg-yellow-50', border: 'border-yellow-200', btn: 'bg-yellow-400' },
+  { key: 'blue',   bg: 'bg-blue-50',   border: 'border-blue-200',   btn: 'bg-blue-400'   },
+  { key: 'green',  bg: 'bg-green-50',  border: 'border-green-200',  btn: 'bg-green-400'  },
+  { key: 'pink',   bg: 'bg-pink-50',   border: 'border-pink-200',   btn: 'bg-pink-400'   },
+]
+const colorMap = Object.fromEntries(NOTE_COLORS.map(c => [c.key, c]))
+
+function GhiChuWidget() {
+  const [notes, setNotes] = React.useState(() => {
+    try { return JSON.parse(localStorage.getItem('khounice_ghi_chu') || '[]') }
+    catch { return [] }
+  })
+  const [draft, setDraft]   = React.useState('')
+  const [color, setColor]   = React.useState('yellow')
+  const [editId, setEditId] = React.useState(null)
+  const [editText, setEditText] = React.useState('')
+
+  const save = (next) => {
+    setNotes(next)
+    localStorage.setItem('khounice_ghi_chu', JSON.stringify(next))
+  }
+
+  const addNote = () => {
+    if (!draft.trim()) return
+    save([{ id: Date.now(), noi_dung: draft.trim(), mau: color, created_at: new Date().toLocaleString('vi-VN') }, ...notes])
+    setDraft('')
+  }
+
+  const deleteNote = (id) => save(notes.filter(n => n.id !== id))
+
+  const startEdit = (n) => { setEditId(n.id); setEditText(n.noi_dung) }
+  const saveEdit  = (id) => {
+    save(notes.map(n => n.id === id ? { ...n, noi_dung: editText } : n))
+    setEditId(null)
+  }
+
+  return (
+    <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
+      <div className="flex items-center gap-2 mb-4">
+        <StickyNote className="w-4 h-4 text-amber-500" />
+        <h3 className="font-semibold text-gray-800">Ghi chu cong viec</h3>
+        <span className="ml-auto text-xs text-gray-400">{notes.length} ghi chu</span>
+      </div>
+
+      {/* Input thêm mới */}
+      <div className="flex gap-2 mb-4">
+        <textarea
+          value={draft}
+          onChange={e => setDraft(e.target.value)}
+          onKeyDown={e => { if (e.key === 'Enter' && e.ctrlKey) addNote() }}
+          placeholder="Nhap ghi chu... (Ctrl+Enter de luu)"
+          rows={2}
+          className="flex-1 border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-blue-300 resize-none"
+        />
+        <div className="flex flex-col gap-1.5">
+          <div className="flex gap-1">
+            {NOTE_COLORS.map(c => (
+              <button key={c.key} onClick={() => setColor(c.key)}
+                className={`w-5 h-5 rounded-full ${c.btn} transition-transform ${color === c.key ? 'scale-125 ring-2 ring-offset-1 ring-gray-400' : ''}`} />
+            ))}
+          </div>
+          <button onClick={addNote} disabled={!draft.trim()}
+            className="flex items-center gap-1 px-3 py-1.5 bg-blue-500 hover:bg-blue-600 text-white rounded-lg text-xs font-medium disabled:opacity-40 transition-colors">
+            <Plus className="w-3 h-3" /> Them
+          </button>
+        </div>
+      </div>
+
+      {/* Danh sách ghi chú */}
+      {notes.length === 0
+        ? <div className="text-center text-gray-300 py-6 text-sm">Chua co ghi chu nao</div>
+        : <div className="grid grid-cols-2 gap-2 max-h-72 overflow-y-auto pr-1">
+            {notes.map(n => {
+              const c = colorMap[n.mau] || colorMap.yellow
+              return (
+                <div key={n.id} className={`rounded-xl border p-3 text-sm ${c.bg} ${c.border} relative group`}>
+                  {editId === n.id
+                    ? <div className="space-y-1.5">
+                        <textarea
+                          value={editText}
+                          onChange={e => setEditText(e.target.value)}
+                          autoFocus
+                          rows={3}
+                          className="w-full bg-transparent border-none outline-none text-gray-800 text-sm resize-none"
+                        />
+                        <div className="flex gap-2 justify-end">
+                          <button onClick={() => setEditId(null)} className="text-xs text-gray-400 hover:text-gray-600">Huy</button>
+                          <button onClick={() => saveEdit(n.id)} className="text-xs text-blue-600 font-medium hover:text-blue-800">Luu</button>
+                        </div>
+                      </div>
+                    : <>
+                        <p className="text-gray-800 whitespace-pre-wrap cursor-pointer leading-relaxed"
+                          onClick={() => startEdit(n)}>{n.noi_dung}</p>
+                        <p className="text-xs text-gray-400 mt-1.5">{n.created_at}</p>
+                        <button onClick={() => deleteNote(n.id)}
+                          className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:bg-white rounded-full text-gray-400 hover:text-red-500">
+                          <X className="w-3 h-3" />
+                        </button>
+                      </>
+                  }
+                </div>
+              )
+            })}
+          </div>
+      }
+    </div>
+  )
+}
 
 const fmt = (n) => (n ?? 0).toLocaleString('vi-VN')
 
@@ -322,6 +433,9 @@ export default function Dashboard() {
           }
         </div>
       </div>
+
+      {/* Ghi chú công việc */}
+      <GhiChuWidget />
 
       {/* Flow Diagram */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5">

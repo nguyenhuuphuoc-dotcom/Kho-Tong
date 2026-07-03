@@ -29,6 +29,7 @@ class PhieuCreate(BaseModel):
     ghi_chu: Optional[str] = ""
     tong_tien: Optional[float] = 0
     items: Optional[List[PhieuItem]] = []
+    user_email: Optional[str] = ""   # Ghi nhật ký
 
 
 @router.get("/")
@@ -102,6 +103,16 @@ def create_phieu(body: PhieuCreate):
                     it["thanh_tien"] = it["so_luong"] * it["don_gia"]
             db.push_chi_tiet(phieu_id, items_data)
 
+        # Ghi nhật ký
+        db.log_activity(
+            action=f"create_{body.loai.lower()}",
+            entity_type="phieu",
+            entity_id=str(phieu_id),
+            details=f"{body.loai} {body.so_phieu} | {body.ngay} | {body.doi_tac or ''} | {body.tong_tien:,.0f} VND",
+            user_email=body.user_email or "",
+            cong_trinh_id=body.cong_trinh_id,
+        )
+
         return {
             "success": True,
             "phieu_id": phieu_id,
@@ -115,10 +126,17 @@ def create_phieu(body: PhieuCreate):
 
 
 @router.delete("/{id}")
-def delete_phieu(id: int):
+def delete_phieu(id: int, user_email: Optional[str] = Query(None)):
     """Xóa phiếu và toàn bộ chi tiết phiếu."""
     try:
         db.delete_phieu(id)
+        db.log_activity(
+            action="delete_phieu",
+            entity_type="phieu",
+            entity_id=str(id),
+            details=f"Xoa phieu id={id}",
+            user_email=user_email or "",
+        )
         return {"success": True, "deleted_id": id}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Lỗi xóa phiếu: {str(e)}")

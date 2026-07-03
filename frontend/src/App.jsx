@@ -19,6 +19,7 @@ import CanhBao from './pages/CanhBao'
 import PhanQuyen from './pages/PhanQuyen'
 import NguoiDung from './pages/NguoiDung'
 import ImportData from './pages/ImportData'
+import NhatKy from './pages/NhatKy'
 import Login from './pages/Login'
 
 // Web Con layout + pages
@@ -75,6 +76,7 @@ export default function App() {
           <Route path="phan-quyen"  element={<PhanQuyen />} />
           <Route path="nguoi-dung"  element={<NguoiDung />} />
           <Route path="input-data"  element={<ImportData />} />
+          <Route path="nhat-ky"    element={<NhatKy />} />
         </Route>
 
         {/* ── Web Con (theo id cong trinh) ── */}

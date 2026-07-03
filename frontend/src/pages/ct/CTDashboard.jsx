@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { useOutletContext, Link, useParams } from 'react-router-dom'
-import { Download, Upload, Package, AlertCircle, RefreshCw, ArrowRight } from 'lucide-react'
+import { Download, Upload, Package, AlertCircle, RefreshCw, ArrowRight, AlertTriangle, CheckCircle, Settings } from 'lucide-react'
 import { getPhieuList, getTonKho } from '../../api'
 
 const fmt = (n) => (n ?? 0).toLocaleString('vi-VN')
@@ -40,10 +40,15 @@ export default function CTDashboard() {
 
   useEffect(() => { loadData() }, [realId])
 
+  const [nguong, setNguong] = useState(10)   // ngưỡng cảnh báo sắp hết
+  const [showNguong, setShowNguong] = useState(false)
+
   const tongTienNK = phieuNK.reduce((s, p) => s + (p.tong_tien || 0), 0)
   const tongTienXK = phieuXK.reduce((s, p) => s + (p.tong_tien || 0), 0)
-  const hetHang = tonKho.filter(r => (r.ton_cuoi ?? 0) <= 0)
-  const conHang = tonKho.filter(r => (r.ton_cuoi ?? 0) > 0)
+  const amKho  = tonKho.filter(r => (r.ton_cuoi ?? 0) < 0)
+  const hetHang = tonKho.filter(r => (r.ton_cuoi ?? 0) === 0)
+  const sapHet  = tonKho.filter(r => (r.ton_cuoi ?? 0) > 0 && (r.ton_cuoi ?? 0) <= nguong)
+  const conHang = tonKho.filter(r => (r.ton_cuoi ?? 0) > nguong)
 
   // 5 phiếu gần nhất
   const recentNK = [...phieuNK].sort((a, b) => (b.ngay || '').localeCompare(a.ngay || '')).slice(0, 5)
@@ -69,7 +74,7 @@ export default function CTDashboard() {
           { icon: Download, bg: 'bg-green-500', label: 'So phieu NK', value: loading ? '...' : phieuNK.length, sub: formatVND(tongTienNK) },
           { icon: Upload,   bg: 'bg-orange-500', label: 'So phieu XK', value: loading ? '...' : phieuXK.length, sub: formatVND(tongTienXK) },
           { icon: Package,  bg: 'bg-purple-500', label: 'Mat hang con hang', value: loading ? '...' : conHang.length, sub: `/ ${tonKho.length} mat hang` },
-          { icon: AlertCircle, bg: 'bg-red-500', label: 'Het hang', value: loading ? '...' : hetHang.length, sub: 'Can nhap them', color: 'text-red-600' },
+          { icon: AlertCircle, bg: 'bg-red-500', label: 'Am kho / Het hang', value: loading ? '...' : amKho.length + hetHang.length, sub: 'Can nhap them', color: 'text-red-600' },
         ].map((kpi, i) => (
           <div key={i} className="bg-white rounded-xl border border-gray-100 p-4 flex items-center gap-3">
             <div className={`w-10 h-10 ${kpi.bg} rounded-xl flex items-center justify-center flex-shrink-0`}>
@@ -149,26 +154,111 @@ export default function CTDashboard() {
         </div>
       </div>
 
-      {/* Het hang canh bao */}
-      {!loading && hetHang.length > 0 && (
-        <div className="bg-white rounded-xl border border-red-100 p-5">
-          <div className="flex items-center gap-2 mb-3">
-            <AlertCircle className="w-4 h-4 text-red-500" />
-            <h3 className="font-semibold text-red-700">{hetHang.length} mat hang het hang — can nhap them</h3>
+      {/* ── CẢNH BÁO TỒN KHO ───────────────────────────────── */}
+      {!loading && (amKho.length > 0 || hetHang.length > 0 || sapHet.length > 0) && (
+        <div className="space-y-3">
+          {/* Header cảnh báo + cài ngưỡng */}
+          <div className="flex items-center justify-between">
+            <h3 className="font-semibold text-gray-800 flex items-center gap-2">
+              <AlertTriangle className="w-4 h-4 text-amber-500" />
+              Canh bao ton kho
+            </h3>
+            <button onClick={() => setShowNguong(v => !v)}
+              className="flex items-center gap-1 text-xs text-gray-400 hover:text-gray-600">
+              <Settings className="w-3 h-3" />
+              Nguong: {nguong}
+            </button>
           </div>
-          <div className="grid grid-cols-3 gap-2">
-            {hetHang.slice(0, 9).map((r, i) => (
-              <div key={i} className="bg-red-50 rounded-lg px-3 py-2 text-xs">
-                <div className="font-medium text-gray-800 truncate">{r.ten_hang}</div>
-                <div className="text-red-600 font-semibold">Ton: {fmt(r.ton_cuoi)} {r.dvt}</div>
-              </div>
-            ))}
-          </div>
-          {hetHang.length > 9 && (
-            <Link to={`/ct/${realId}/ton-kho`} className="mt-3 text-xs text-teal-600 hover:underline block text-center">
-              Xem them {hetHang.length - 9} mat hang khac...
-            </Link>
+
+          {showNguong && (
+            <div className="bg-gray-50 rounded-xl p-3 flex items-center gap-3 text-sm">
+              <label className="text-gray-600 text-xs">Canh bao sap het khi ton &le;</label>
+              <input
+                type="number" min="1" max="100" value={nguong}
+                onChange={e => setNguong(Number(e.target.value) || 10)}
+                className="w-16 border border-gray-200 rounded-lg px-2 py-1 text-xs text-center focus:outline-none focus:border-blue-400"
+              />
+              <span className="text-xs text-gray-400">(don vi tinh)</span>
+            </div>
           )}
+
+          {/* Âm kho - critical */}
+          {amKho.length > 0 && (
+            <div className="bg-white rounded-xl border border-red-200 p-4">
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-2">
+                  <span className="w-2.5 h-2.5 bg-red-500 rounded-full animate-pulse" />
+                  <span className="font-semibold text-red-700 text-sm">{amKho.length} mat hang AM KHO — khan cap!</span>
+                </div>
+                <Link to={`/ct/${realId}/ton-kho`} className="text-xs text-teal-600 hover:underline flex items-center gap-1">
+                  Xem tat ca <ArrowRight className="w-3 h-3" />
+                </Link>
+              </div>
+              <div className="grid grid-cols-3 gap-2">
+                {amKho.slice(0, 9).map((r, i) => (
+                  <div key={i} className="bg-red-50 border border-red-100 rounded-lg px-3 py-2 text-xs">
+                    <div className="font-medium text-gray-800 truncate">{r.ten_hang}</div>
+                    <div className="text-red-600 font-bold">Ton: {fmt(r.ton_cuoi)} {r.dvt}</div>
+                  </div>
+                ))}
+              </div>
+              {amKho.length > 9 && <p className="text-xs text-gray-400 text-center mt-2">...va {amKho.length - 9} mat hang khac</p>}
+            </div>
+          )}
+
+          {/* Hết hàng - critical */}
+          {hetHang.length > 0 && (
+            <div className="bg-white rounded-xl border border-orange-200 p-4">
+              <div className="flex items-center gap-2 mb-3">
+                <span className="w-2.5 h-2.5 bg-orange-500 rounded-full" />
+                <span className="font-semibold text-orange-700 text-sm">{hetHang.length} mat hang HET HANG (ton = 0)</span>
+              </div>
+              <div className="grid grid-cols-3 gap-2">
+                {hetHang.slice(0, 6).map((r, i) => (
+                  <div key={i} className="bg-orange-50 border border-orange-100 rounded-lg px-3 py-2 text-xs">
+                    <div className="font-medium text-gray-800 truncate">{r.ten_hang}</div>
+                    <div className="text-orange-600 font-bold">Da het hang</div>
+                  </div>
+                ))}
+              </div>
+              {hetHang.length > 6 && <p className="text-xs text-gray-400 text-center mt-2">...va {hetHang.length - 6} mat hang khac</p>}
+            </div>
+          )}
+
+          {/* Sắp hết - warning */}
+          {sapHet.length > 0 && (
+            <div className="bg-white rounded-xl border border-amber-200 p-4">
+              <div className="flex items-center gap-2 mb-3">
+                <span className="w-2.5 h-2.5 bg-amber-400 rounded-full" />
+                <span className="font-semibold text-amber-700 text-sm">{sapHet.length} mat hang SAP HET (ton &le; {nguong})</span>
+              </div>
+              <div className="grid grid-cols-3 gap-2">
+                {sapHet.slice(0, 6).map((r, i) => (
+                  <div key={i} className="bg-amber-50 border border-amber-100 rounded-lg px-3 py-2 text-xs">
+                    <div className="font-medium text-gray-800 truncate">{r.ten_hang}</div>
+                    <div className="text-amber-600 font-semibold">Con: {fmt(r.ton_cuoi)} {r.dvt}</div>
+                  </div>
+                ))}
+              </div>
+              {sapHet.length > 6 && <p className="text-xs text-gray-400 text-center mt-2">...va {sapHet.length - 6} mat hang khac</p>}
+            </div>
+          )}
+
+          {/* OK - không có cảnh báo */}
+          {amKho.length === 0 && hetHang.length === 0 && sapHet.length === 0 && (
+            <div className="bg-green-50 rounded-xl border border-green-100 p-4 flex items-center gap-3">
+              <CheckCircle className="w-5 h-5 text-green-500" />
+              <span className="text-sm text-green-700 font-medium">Ton kho on dinh — khong co canh bao</span>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Không có cảnh báo */}
+      {!loading && amKho.length === 0 && hetHang.length === 0 && sapHet.length === 0 && tonKho.length > 0 && (
+        <div className="bg-green-50 rounded-xl border border-green-100 p-4 flex items-center gap-3">
+          <CheckCircle className="w-5 h-5 text-green-500" />
+          <span className="text-sm text-green-700 font-medium">Ton kho on dinh — khong co canh bao</span>
         </div>
       )}
     </div>

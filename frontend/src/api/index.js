@@ -36,6 +36,10 @@ export const getTonKho = (params) => api.get('/ton-kho', { params })
 export const getBaoCaoTongHop = (params) => api.get('/bao-cao/tong-hop', { params })
 export const getBieuDo = (params) => api.get('/bao-cao/bieu-do', { params })
 
+// Nhat ky hoat dong
+export const getNhatKy = (params) => api.get('/nhat-ky', { params })
+export const logActivity = (data) => api.post('/nhat-ky/log', data)
+
 // AI
 export const docPhieu = (formData) => api.post('/ai/doc-phieu', formData, {
   headers: { 'Content-Type': 'multipart/form-data' },
