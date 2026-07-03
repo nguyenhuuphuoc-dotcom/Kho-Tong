@@ -18,8 +18,8 @@ export function CongTrinhProvider({ children }) {
         const admin = res.data?.is_admin || false
         setCongTrinhs(list)
         setIsAdmin(admin)
-        // User thường: tự động chọn CT đầu tiên
-        if (!admin && list.length > 0) {
+        // Tự động chọn CT đầu tiên (cả admin lẫn user thường)
+        if (list.length > 0) {
           setSelectedCT(list[0])
         }
       })
