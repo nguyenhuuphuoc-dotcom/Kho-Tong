@@ -17,6 +17,14 @@ class CongTrinhCreate(BaseModel):
     dia_chi: Optional[str] = ""
     ghi_chu: Optional[str] = ""
 
+class CongTrinhUpdate(BaseModel):
+    ten_ct: Optional[str] = None
+    dia_chi: Optional[str] = None
+    ghi_chu: Optional[str] = None
+
+class UpdateTrangThai(BaseModel):
+    trang_thai: str  # 'hoat_dong' | 'hoan_thanh'
+
 
 @router.get("/")
 def list_cong_trinh():
@@ -52,6 +60,33 @@ def delete_cong_trinh(id: int):
         raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Loi xoa: {str(e)}")
+
+
+@router.put("/{id}")
+def update_cong_trinh(id: int, body: CongTrinhUpdate):
+    """Cập nhật thông tin công trình."""
+    try:
+        data = {k: v for k, v in body.model_dump(exclude_unset=True).items() if v is not None}
+        if not data:
+            raise HTTPException(status_code=400, detail="Khong co truong nao de cap nhat")
+        rows = db.update("cong_trinh", data, f"id=eq.{id}")
+        return rows[0] if rows else {"success": True, "id": id}
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.put("/{id}/trang-thai")
+def update_trang_thai(id: int, body: UpdateTrangThai):
+    """Cập nhật trạng thái công trình: hoat_dong | hoan_thanh"""
+    if body.trang_thai not in ("hoat_dong", "hoan_thanh"):
+        raise HTTPException(status_code=400, detail="trang_thai phai la 'hoat_dong' hoac 'hoan_thanh'")
+    try:
+        db.update("cong_trinh", {"trang_thai": body.trang_thai}, f"id=eq.{id}")
+        return {"success": True, "id": id, "trang_thai": body.trang_thai}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @router.post("/")

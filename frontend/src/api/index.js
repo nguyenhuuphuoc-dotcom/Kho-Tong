@@ -16,6 +16,7 @@ export const getCongTrinh = () => api.get('/cong-trinh')
 export const createCongTrinh = (data) => api.post('/cong-trinh/', data)
 export const updateCongTrinh = (id, data) => api.put(`/cong-trinh/${id}`, data)
 export const deleteCongTrinh = (id) => api.delete(`/cong-trinh/${id}`)
+export const updateCongTrinhStatus = (id, trang_thai) => api.put(`/cong-trinh/${id}/trang-thai`, { trang_thai })
 
 // Phieu
 export const getPhieuList = (params) => api.get('/phieu', { params })

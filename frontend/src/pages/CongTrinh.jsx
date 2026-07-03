@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from 'react'
-import { Building2, Search, RefreshCw, MapPin, Hash, FileText, Plus, Trash2, X, CheckCircle, XCircle } from 'lucide-react'
-import { api, getCongTrinh } from '../api'
+import {
+  Building2, Search, RefreshCw, MapPin, Hash, FileText,
+  Plus, Trash2, X, CheckCircle, XCircle, CheckCircle2, RotateCcw
+} from 'lucide-react'
+import { api, updateCongTrinhStatus } from '../api'
 import { useCongTrinh } from '../context/CongTrinhContext'
 
 export default function CongTrinh() {
@@ -10,12 +13,14 @@ export default function CongTrinh() {
   const [search, setSearch]     = useState('')
   const [showForm, setShowForm] = useState(false)
   const [saving, setSaving]     = useState(false)
+  const [updating, setUpdating] = useState(null)  // id dang update trang thai
   const [msg, setMsg]           = useState(null)
   const [form, setForm] = useState({ ten_ct: '', ma_ct: '', dia_chi: '', ghi_chu: '' })
 
   const loadData = () => {
     setLoading(true)
-    getCongTrinh()
+    // Dung trailing slash de tranh SPA catch-all route
+    api.get('/cong-trinh/')
       .then(res => setData(res.data?.data || []))
       .catch(() => setData([]))
       .finally(() => setLoading(false))
@@ -42,7 +47,7 @@ export default function CongTrinh() {
       setForm({ ten_ct: '', ma_ct: '', dia_chi: '', ghi_chu: '' })
       setShowForm(false)
       loadData()
-      loadCongTrinh()   // refresh sidebar
+      loadCongTrinh()
     } catch (err) {
       setMsg({ type: 'err', text: err.response?.data?.detail || 'Loi tao cong trinh' })
     } finally {
@@ -51,7 +56,7 @@ export default function CongTrinh() {
   }
 
   const handleDelete = async (id, ten) => {
-    if (!window.confirm(`Xoa cong trinh: ${ten}?`)) return
+    if (!window.confirm(`Xoa vinh vien cong trinh: ${ten}?\nThao tac nay khong the hoan tac.`)) return
     try {
       await api.delete(`/cong-trinh/${id}`)
       setMsg({ type: 'ok', text: `Da xoa: ${ten}` })
@@ -61,12 +66,41 @@ export default function CongTrinh() {
     }
   }
 
+  const handleToggleStatus = async (ct) => {
+    const newStatus = (ct.trang_thai || 'hoat_dong') === 'hoat_dong' ? 'hoan_thanh' : 'hoat_dong'
+    const label = newStatus === 'hoan_thanh' ? 'Hoan thanh' : 'Hoat dong lai'
+    if (!window.confirm(`${label} cong trinh: ${ct.ten_ct}?`)) return
+    setUpdating(ct.id)
+    try {
+      await updateCongTrinhStatus(ct.id, newStatus)
+      setData(prev => prev.map(c => c.id === ct.id ? { ...c, trang_thai: newStatus } : c))
+      setMsg({ type: 'ok', text: `Cap nhat trang thai thanh cong: ${ct.ten_ct}` })
+    } catch (err) {
+      setMsg({ type: 'err', text: err.response?.data?.detail || 'Loi cap nhat trang thai' })
+    } finally {
+      setUpdating(null)
+    }
+  }
+
+  const getTrangThaiInfo = (trang_thai) => {
+    if (!trang_thai || trang_thai === 'hoat_dong') {
+      return { label: 'Hoat dong', className: 'bg-green-100 text-green-700' }
+    }
+    return { label: 'Hoan thanh', className: 'bg-gray-100 text-gray-500' }
+  }
+
+  const dang_hoat_dong = data.filter(c => !c.trang_thai || c.trang_thai === 'hoat_dong').length
+  const hoan_thanh    = data.filter(c => c.trang_thai === 'hoan_thanh').length
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-800">DANH SACH CONG TRINH</h1>
-          <p className="text-gray-500 mt-1 text-sm">{data.length} cong trinh dang quan ly</p>
+          <p className="text-gray-500 mt-1 text-sm">
+            {data.length} cong trinh — <span className="text-green-600">{dang_hoat_dong} hoat dong</span>
+            {hoan_thanh > 0 && <span className="text-gray-400"> · {hoan_thanh} hoan thanh</span>}
+          </p>
         </div>
         <div className="flex gap-2">
           <button onClick={loadData} disabled={loading}
@@ -107,47 +141,87 @@ export default function CongTrinh() {
         : filtered.length === 0
           ? <div className="text-center text-gray-400 py-12">
               <Building2 className="w-12 h-12 mx-auto mb-3 text-gray-200" />
-              <div className="font-medium">Chua co cong trinh nao</div>
-              <div className="text-sm mt-1">Nhan "Them cong trinh" de tao moi</div>
+              <div className="font-medium">
+                {search ? 'Khong tim thay ket qua' : 'Chua co cong trinh nao'}
+              </div>
+              {!search && <div className="text-sm mt-1">Nhan "Them cong trinh" de tao moi</div>}
             </div>
           : <div className="grid grid-cols-1 gap-3">
-              {filtered.map((ct, i) => (
-                <div key={ct.id} className="bg-white rounded-xl border border-gray-100 p-5 flex items-start gap-4 hover:shadow-sm transition-shadow">
-                  <div className="w-10 h-10 bg-teal-100 rounded-xl flex items-center justify-center flex-shrink-0 font-bold text-teal-600 text-sm">
-                    {i + 1}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-start justify-between gap-3">
-                      <div>
-                        <div className="font-bold text-gray-800">{ct.ten_ct}</div>
-                        <div className="flex items-center gap-1 mt-0.5">
-                          <Hash className="w-3 h-3 text-gray-400" />
-                          <span className="text-xs font-mono text-gray-500">{ct.ma_ct}</span>
+              {filtered.map((ct, i) => {
+                const ttInfo = getTrangThaiInfo(ct.trang_thai)
+                const isHoanThanh = ct.trang_thai === 'hoan_thanh'
+                const isUpdating = updating === ct.id
+                return (
+                  <div key={ct.id} className={`bg-white rounded-xl border p-5 flex items-start gap-4 hover:shadow-sm transition-all ${
+                    isHoanThanh ? 'border-gray-100 opacity-70' : 'border-gray-100'
+                  }`}>
+                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 font-bold text-sm ${
+                      isHoanThanh ? 'bg-gray-100 text-gray-400' : 'bg-teal-100 text-teal-600'
+                    }`}>
+                      {i + 1}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-start justify-between gap-3">
+                        <div>
+                          <div className={`font-bold ${isHoanThanh ? 'text-gray-400 line-through' : 'text-gray-800'}`}>
+                            {ct.ten_ct}
+                          </div>
+                          <div className="flex items-center gap-1 mt-0.5">
+                            <Hash className="w-3 h-3 text-gray-400" />
+                            <span className="text-xs font-mono text-gray-500">{ct.ma_ct}</span>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2 flex-shrink-0">
+                          {/* Badge trang thai */}
+                          <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${ttInfo.className}`}>
+                            {ttInfo.label}
+                          </span>
+
+                          {/* Nut Hoan thanh / Hoat dong lai */}
+                          <button
+                            onClick={() => handleToggleStatus(ct)}
+                            disabled={isUpdating}
+                            title={isHoanThanh ? 'Hoat dong lai' : 'Danh dau Hoan thanh'}
+                            className={`p-1.5 rounded-lg transition-colors disabled:opacity-50 ${
+                              isHoanThanh
+                                ? 'hover:bg-green-50 text-gray-400 hover:text-green-600'
+                                : 'hover:bg-amber-50 text-gray-400 hover:text-amber-600'
+                            }`}
+                          >
+                            {isUpdating
+                              ? <RefreshCw className="w-4 h-4 animate-spin" />
+                              : isHoanThanh
+                                ? <RotateCcw className="w-4 h-4" />
+                                : <CheckCircle2 className="w-4 h-4" />
+                            }
+                          </button>
+
+                          {/* Nut xoa */}
+                          <button
+                            onClick={() => handleDelete(ct.id, ct.ten_ct)}
+                            title="Xoa cong trinh"
+                            className="p-1.5 hover:bg-red-50 text-gray-400 hover:text-red-500 rounded-lg transition-colors"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
                         </div>
                       </div>
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full font-medium">Hoat dong</span>
-                        <button onClick={() => handleDelete(ct.id, ct.ten_ct)}
-                          className="p-1.5 hover:bg-red-50 text-gray-400 hover:text-red-500 rounded-lg transition-colors">
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      </div>
+                      {ct.dia_chi && (
+                        <div className="flex items-center gap-1.5 mt-1.5">
+                          <MapPin className="w-3.5 h-3.5 text-gray-400" />
+                          <span className="text-sm text-gray-500">{ct.dia_chi}</span>
+                        </div>
+                      )}
+                      {ct.ghi_chu && (
+                        <div className="flex items-center gap-1.5 mt-1">
+                          <FileText className="w-3.5 h-3.5 text-gray-400" />
+                          <span className="text-xs text-gray-400 italic">{ct.ghi_chu}</span>
+                        </div>
+                      )}
                     </div>
-                    {ct.dia_chi && (
-                      <div className="flex items-center gap-1.5 mt-1.5">
-                        <MapPin className="w-3.5 h-3.5 text-gray-400" />
-                        <span className="text-sm text-gray-500">{ct.dia_chi}</span>
-                      </div>
-                    )}
-                    {ct.ghi_chu && (
-                      <div className="flex items-center gap-1.5 mt-1">
-                        <FileText className="w-3.5 h-3.5 text-gray-400" />
-                        <span className="text-xs text-gray-400 italic">{ct.ghi_chu}</span>
-                      </div>
-                    )}
                   </div>
-                </div>
-              ))}
+                )
+              })}
             </div>
       }
 

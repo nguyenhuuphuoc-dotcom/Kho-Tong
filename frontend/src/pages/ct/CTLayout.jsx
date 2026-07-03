@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { NavLink, Outlet, useParams, useNavigate } from 'react-router-dom'
 import {
   LayoutDashboard, Download, Upload, Package,
-  Cpu, ChevronLeft, ChevronRight, ArrowLeft, Warehouse, BookOpen
+  Cpu, ChevronLeft, ChevronRight, ArrowLeft, Warehouse, BookOpen, FileUp
 } from 'lucide-react'
 import { getCongTrinh } from '../../api'
 
@@ -13,6 +13,7 @@ const menuItems = [
   { icon: Package,         label: 'Ton kho',         path: 'ton-kho' },
   { icon: BookOpen,        label: 'Danh muc hang',   path: 'danh-muc' },
   { icon: Cpu,             label: 'AI Doc PDF',      path: 'ai-reader' },
+  { icon: FileUp,          label: 'Import du lieu',  path: 'import-data' },
 ]
 
 export default function CTLayout() {
