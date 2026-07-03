@@ -8,15 +8,15 @@ const USER_KEY  = 'hpcons_user'
 
 export function AuthProvider({ children }) {
   const [user, setUser]     = useState(() => {
-    try { return JSON.parse(localStorage.getItem(USER_KEY)) } catch { return null }
+    try { return JSON.parse(sessionStorage.getItem(USER_KEY)) } catch { return null }
   })
-  const [token, setToken]   = useState(() => localStorage.getItem(TOKEN_KEY) || null)
+  const [token, setToken]   = useState(() => sessionStorage.getItem(TOKEN_KEY) || null)
   const [loading, setLoading] = useState(true)
 
   // Gắn Bearer token vào mọi request
   useEffect(() => {
     const id = api.interceptors.request.use(cfg => {
-      const t = localStorage.getItem(TOKEN_KEY)
+      const t = sessionStorage.getItem(TOKEN_KEY)
       if (t) cfg.headers = { ...cfg.headers, Authorization: `Bearer ${t}` }
       return cfg
     })
@@ -25,13 +25,13 @@ export function AuthProvider({ children }) {
 
   // Verify token khi khởi động
   useEffect(() => {
-    const t = localStorage.getItem(TOKEN_KEY)
+    const t = sessionStorage.getItem(TOKEN_KEY)
     if (!t) { setLoading(false); return }
     api.get('/auth/me')
       .then(res => setUser(res.data))
       .catch(() => {
-        localStorage.removeItem(TOKEN_KEY)
-        localStorage.removeItem(USER_KEY)
+        sessionStorage.removeItem(TOKEN_KEY)
+        sessionStorage.removeItem(USER_KEY)
         setToken(null)
         setUser(null)
       })
@@ -41,15 +41,15 @@ export function AuthProvider({ children }) {
   const login = async (email, password) => {
     const res = await api.post('/auth/login', { email, password })
     const { access_token, user: u } = res.data
-    localStorage.setItem(TOKEN_KEY, access_token)
-    localStorage.setItem(USER_KEY, JSON.stringify(u))
+    sessionStorage.setItem(TOKEN_KEY, access_token)
+    sessionStorage.setItem(USER_KEY, JSON.stringify(u))
     setToken(access_token)
     setUser(u)
   }
 
   const logout = () => {
-    localStorage.removeItem(TOKEN_KEY)
-    localStorage.removeItem(USER_KEY)
+    sessionStorage.removeItem(TOKEN_KEY)
+    sessionStorage.removeItem(USER_KEY)
     setToken(null)
     setUser(null)
   }
