@@ -1,8 +1,10 @@
 import React, { useState, useRef, useEffect } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
-import { Bell, HelpCircle, Calendar, Download, ChevronRight, Home, LogOut } from 'lucide-react'
+import { Bell, HelpCircle, Calendar, Download, ChevronRight, Home, LogOut, Loader } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
 import { useCongTrinh } from '../../context/CongTrinhContext'
+import { getPhieuList, getTonKho } from '../../api'
+import { exportBaoCaoTongHop } from '../../utils/exportExcel'
 
 const routeNames = {
   '/':             'Bao cao tong hop',
@@ -37,12 +39,12 @@ export default function Header({ notificationCount = 5 }) {
   const location = useLocation()
   const navigate = useNavigate()
   const { user, logout } = useAuth()
-  const { dateFrom, dateTo, setDateFrom, setDateTo } = useCongTrinh()
-
+  const { dateFrom, dateTo, setDateFrom, setDateTo, selectedCT, congTrinhs } = useCongTrinh()
   const [showMenu, setShowMenu]     = useState(false)
   const [showPicker, setShowPicker] = useState(false)
   const [tempFrom, setTempFrom]     = useState(dateFrom)
   const [tempTo, setTempTo]         = useState(dateTo)
+  const [exporting, setExporting]   = useState(false)
 
   const pickerRef = useRef(null)
   const pageName  = routeNames[location.pathname] || 'Trang chu'
@@ -73,6 +75,37 @@ export default function Header({ notificationCount = 5 }) {
   const handleLogout = () => {
     logout()
     navigate('/login')
+  }
+
+  const handleExport = async () => {
+    setExporting(true)
+    try {
+      const ctId   = selectedCT?.id
+      const params = { limit: 2000 }
+      if (ctId)    params.cong_trinh_id = ctId
+      if (dateFrom) params.date_from = dateFrom
+      if (dateTo)   params.date_to   = dateTo
+
+      const [resNK, resXK, resTK] = await Promise.all([
+        getPhieuList({ ...params, loai: 'NK' }),
+        getPhieuList({ ...params, loai: 'XK' }),
+        getTonKho(ctId ? { cong_trinh_id: ctId } : {}),
+      ])
+
+      await exportBaoCaoTongHop({
+        nkList:     resNK.data?.data || [],
+        xkList:     resXK.data?.data || [],
+        tonKhoList: resTK.data?.data || [],
+        ctName:     selectedCT?.ten_ct || '',
+        dateFrom,
+        dateTo,
+        congTrinhs,
+      })
+    } catch (e) {
+      alert('Loi xuat bao cao: ' + (e.message || 'Thu lai.'))
+    } finally {
+      setExporting(false)
+    }
   }
 
   const initials = (user?.ten || user?.email || 'U')
@@ -171,9 +204,14 @@ export default function Header({ notificationCount = 5 }) {
           )}
         </div>
 
-        <button className="flex items-center gap-2 px-4 py-1.5 bg-blue-500 text-white rounded-lg text-sm font-medium hover:bg-blue-600 transition-colors">
-          <Download className="w-4 h-4" />
-          <span>Xuat bao cao</span>
+        <button
+          onClick={handleExport}
+          disabled={exporting}
+          className="flex items-center gap-2 px-4 py-1.5 bg-blue-500 text-white rounded-lg text-sm font-medium hover:bg-blue-600 transition-colors disabled:opacity-60">
+          {exporting
+            ? <Loader className="w-4 h-4 animate-spin" />
+            : <Download className="w-4 h-4" />}
+          <span>{exporting ? 'Dang xuat...' : 'Xuat bao cao'}</span>
         </button>
 
         <div className="w-px h-6 bg-gray-200" />

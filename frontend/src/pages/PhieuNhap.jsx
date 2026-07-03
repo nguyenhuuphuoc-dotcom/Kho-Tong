@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react'
-import { Download, Search, RefreshCw, Eye, X, Plus, Trash2, Bot, Loader, FileText } from 'lucide-react'
+import { Download, Search, RefreshCw, Eye, X, Plus, Trash2, Bot, Loader, FileText, FileDown } from 'lucide-react'
 import { getPhieuList, getChiTietPhieu, createPhieu, docPhieu } from '../api'
 import { useCongTrinh } from '../context/CongTrinhContext'
 import { useAuth } from '../context/AuthContext'
+import { exportPhieuList } from '../utils/exportExcel'
 
 const fmt = (n) => (n ?? 0).toLocaleString('vi-VN')
 function formatVND(n) {
@@ -31,6 +32,7 @@ export default function PhieuNhap() {
   const [selectedPhieu, setSelectedPhieu] = useState(null)
   const [chiTiet, setChiTiet] = useState([])
   const [loadingChiTiet, setLoadingChiTiet] = useState(false)
+  const [exporting, setExporting] = useState(false)
 
   // Create modal
   const [showCreate, setShowCreate] = useState(false)
@@ -192,6 +194,26 @@ export default function PhieuNhap() {
               Tao phieu NK
             </button>
           )}
+          <button
+            onClick={async () => {
+              setExporting(true)
+              try {
+                await exportPhieuList({
+                  phieuList: filtered,
+                  loai: 'NK',
+                  ctName: selectedCT?.ten_ct || '',
+                  dateFrom,
+                  dateTo,
+                  congTrinhs,
+                })
+              } catch (e) { alert(e.message) }
+              finally { setExporting(false) }
+            }}
+            disabled={exporting || filtered.length === 0}
+            className="flex items-center gap-2 px-4 py-2 bg-green-50 hover:bg-green-100 text-green-700 rounded-lg text-sm font-medium transition-colors disabled:opacity-50">
+            <FileDown className={`w-4 h-4 ${exporting ? 'animate-bounce' : ''}`} />
+            {exporting ? 'Dang xuat...' : 'Xuat Excel'}
+          </button>
           <button onClick={loadData} disabled={loading}
             className="flex items-center gap-2 px-4 py-2 bg-blue-50 hover:bg-blue-100 text-blue-600 rounded-lg text-sm font-medium transition-colors disabled:opacity-50">
             <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />

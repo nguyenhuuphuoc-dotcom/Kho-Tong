@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react'
 import { useOutletContext, useParams } from 'react-router-dom'
-import { Upload, Search, RefreshCw, Eye, Plus, X, Trash2 } from 'lucide-react'
+import { Upload, Search, RefreshCw, Eye, Plus, X, Trash2, FileDown } from 'lucide-react'
 import { getPhieuList, getChiTietPhieu, createPhieu, getHangHoa } from '../../api'
+import { exportPhieuList } from '../../utils/exportExcel'
 
 const fmt = (n) => (n ?? 0).toLocaleString('vi-VN')
 function formatVND(n) {
@@ -25,6 +26,7 @@ export default function CTXuatKho() {
   const [chiTiet, setChiTiet] = useState([])
   const [loadingCT, setLoadingCT] = useState(false)
   const [showForm, setShowForm] = useState(false)
+  const [exporting, setExporting] = useState(false)
   const [saving, setSaving] = useState(false)
   const [form, setForm] = useState({ so_phieu: '', ngay: today(), doi_tac: '', ghi_chu: '' })
   const [items, setItems] = useState([emptyItem()])
@@ -127,6 +129,19 @@ export default function CTXuatKho() {
           <button onClick={loadData} disabled={loading}
             className="flex items-center gap-2 px-3 py-2 bg-gray-50 hover:bg-gray-100 text-gray-600 rounded-lg text-sm disabled:opacity-50">
             <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+          </button>
+          <button
+            onClick={async () => {
+              setExporting(true)
+              try {
+                await exportPhieuList({ phieuList: filtered, loai: 'XK' })
+              } catch (e) { alert(e.message) }
+              finally { setExporting(false) }
+            }}
+            disabled={exporting || filtered.length === 0}
+            className="flex items-center gap-2 px-3 py-2 bg-green-50 hover:bg-green-100 text-green-700 rounded-lg text-sm disabled:opacity-50">
+            <FileDown className={`w-4 h-4 ${exporting ? 'animate-bounce' : ''}`} />
+            {exporting ? '...' : 'Excel'}
           </button>
           <button onClick={() => { setShowForm(true); setSaveMsg(null) }}
             className="flex items-center gap-2 px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-lg text-sm font-medium">
