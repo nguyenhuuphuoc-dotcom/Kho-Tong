@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { Upload, Search, RefreshCw, Eye, X, Plus, Trash2, Bot, Loader, FileText, FileDown } from 'lucide-react'
-import { getPhieuList, getChiTietPhieu, createPhieu, docPhieu } from '../api'
+import { getPhieuList, getChiTietPhieu, createPhieu, docPhieu, getHangHoa } from '../api'
 import { useCongTrinh } from '../context/CongTrinhContext'
 import { useAuth } from '../context/AuthContext'
 import { exportPhieuList } from '../utils/exportExcel'
@@ -40,6 +40,10 @@ export default function PhieuXuat() {
   const [createError, setCreateError] = useState('')
   const [form, setForm] = useState({ so_phieu: '', ngay: todayStr(), doi_tac: '', ghi_chu: '' })
   const [items, setItems] = useState([emptyItem()])
+
+  // Danh muc hang hoa cho autocomplete
+  const [hangHoaList, setHangHoaList] = useState([])
+  const [activeDropdown, setActiveDropdown] = useState(null)
 
   // AI mode
   const [createMode, setCreateMode] = useState('manual') // 'manual' | 'ai'
@@ -90,7 +94,29 @@ export default function PhieuXuat() {
     setCreateMode('manual')
     setAiFile(null)
     setAiError('')
+    setActiveDropdown(null)
+    if (selectedCT) {
+      getHangHoa({ cong_trinh_id: selectedCT.id, limit: 2000 })
+        .then(res => setHangHoaList(res.data?.data || []))
+        .catch(() => setHangHoaList([]))
+    }
     setShowCreate(true)
+  }
+
+  const getDropdownOptions = (idx) => {
+    const kw = (items[idx]?.ten_hang || '').toLowerCase().trim()
+    if (!kw) return []
+    return hangHoaList.filter(h =>
+      (h.ten_hang || '').toLowerCase().includes(kw) ||
+      (h.ma_hang  || '').toLowerCase().includes(kw)
+    ).slice(0, 10)
+  }
+
+  const selectHangHoa = (idx, hh) => {
+    setItems(prev => prev.map((it, i) =>
+      i !== idx ? it : { ...it, ten_hang: hh.ten_hang, dvt: hh.dvt || it.dvt }
+    ))
+    setActiveDropdown(null)
   }
 
   const updateItem = (idx, field, val) => {
@@ -476,7 +502,28 @@ export default function PhieuXuat() {
                           {items.map((it, i) => (
                             <tr key={i} className="border-t border-gray-100">
                               <td className="px-3 py-1.5 text-gray-400 text-center">{i + 1}</td>
-                              <td className="px-1 py-1"><input value={it.ten_hang} onChange={e => updateItem(i, 'ten_hang', e.target.value)} placeholder="Ten vat tu..." className="w-full px-2 py-1.5 border border-gray-200 rounded text-xs focus:outline-none focus:border-orange-300" /></td>
+                              <td className="px-1 py-1 relative">
+                                <input
+                                  value={it.ten_hang}
+                                  onChange={e => { updateItem(i, 'ten_hang', e.target.value); setActiveDropdown(i) }}
+                                  onFocus={() => setActiveDropdown(i)}
+                                  onBlur={() => setTimeout(() => setActiveDropdown(null), 150)}
+                                  placeholder="Ten vat tu..."
+                                  className="w-full px-2 py-1.5 border border-gray-200 rounded text-xs focus:outline-none focus:border-orange-300"
+                                />
+                                {activeDropdown === i && getDropdownOptions(i).length > 0 && (
+                                  <div className="absolute left-0 top-full mt-0.5 bg-white border border-gray-200 rounded-lg shadow-xl z-[100] w-72 max-h-48 overflow-auto">
+                                    {getDropdownOptions(i).map((hh, j) => (
+                                      <button key={j} type="button"
+                                        onMouseDown={() => selectHangHoa(i, hh)}
+                                        className="w-full text-left px-3 py-2 hover:bg-orange-50 text-xs flex items-center gap-2 border-b border-gray-50 last:border-0">
+                                        <span className="text-gray-800 flex-1 truncate">{hh.ten_hang}</span>
+                                        <span className="text-orange-400 font-mono flex-shrink-0">{hh.dvt}</span>
+                                      </button>
+                                    ))}
+                                  </div>
+                                )}
+                              </td>
                               <td className="px-1 py-1"><input type="number" value={it.so_luong} min="0" onChange={e => updateItem(i, 'so_luong', e.target.value)} className="w-full px-2 py-1.5 border border-gray-200 rounded text-xs text-right focus:outline-none focus:border-orange-300" /></td>
                               <td className="px-1 py-1"><input value={it.dvt} onChange={e => updateItem(i, 'dvt', e.target.value)} className="w-full px-2 py-1.5 border border-gray-200 rounded text-xs focus:outline-none focus:border-orange-300" /></td>
                               <td className="px-1 py-1"><input type="number" value={it.don_gia} min="0" onChange={e => updateItem(i, 'don_gia', e.target.value)} className="w-full px-2 py-1.5 border border-gray-200 rounded text-xs text-right focus:outline-none focus:border-orange-300" /></td>
