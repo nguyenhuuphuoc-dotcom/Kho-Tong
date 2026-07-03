@@ -30,7 +30,6 @@ const groupQuanLy = {
     { icon: Box,       label: 'Danh muc hang hoa', path: '/danh-muc' },
     { icon: BarChart2,     label: 'Bao cao',        path: '/bao-cao' },
     { icon: ClipboardList, label: 'Nhat ky HD',   path: '/nhat-ky', adminOnly: true },
-    { icon: FileUp,        label: 'Input du lieu', path: '/input-data', adminOnly: true },
   ]
 }
 
