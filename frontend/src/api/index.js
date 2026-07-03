@@ -13,19 +13,19 @@ api.interceptors.response.use(
 
 // Cong trinh
 export const getCongTrinh = () => api.get('/cong-trinh')
-export const createCongTrinh = (data) => api.post('/cong-trinh', data)
+export const createCongTrinh = (data) => api.post('/cong-trinh/', data)
 export const updateCongTrinh = (id, data) => api.put(`/cong-trinh/${id}`, data)
 export const deleteCongTrinh = (id) => api.delete(`/cong-trinh/${id}`)
 
 // Phieu
 export const getPhieuList = (params) => api.get('/phieu', { params })
 export const getChiTietPhieu = (id) => api.get(`/phieu/${id}/chi-tiet`)
-export const createPhieu = (data) => api.post('/phieu', data)
+export const createPhieu = (data) => api.post('/phieu/', data)
 export const deletePhieu = (id) => api.delete(`/phieu/${id}`)
 
 // Hang hoa
 export const getHangHoa = (params) => api.get('/hang-hoa', { params })
-export const createHangHoa = (data) => api.post('/hang-hoa', data)
+export const createHangHoa = (data) => api.post('/hang-hoa/', data)
 export const updateHangHoa = (ma, data) => api.put(`/hang-hoa/${ma}`, data)
 export const deleteHangHoa = (ma) => api.delete(`/hang-hoa/${ma}`)
 

@@ -12,7 +12,7 @@ router = APIRouter(prefix="/api/hang-hoa", tags=["hang_hoa"])
 
 
 class HangHoaCreate(BaseModel):
-    ma_hang: str
+    ma_hang: Optional[str] = None   # tự gen nếu để trống
     ten_hang: str
     dvt: Optional[str] = "cái"
     nhom: Optional[str] = ""
@@ -50,7 +50,13 @@ def list_hang_hoa(
 def create_hang_hoa(body: HangHoaCreate):
     """Tạo mặt hàng mới."""
     try:
-        row = db.create_hang_hoa(body.model_dump())
+        import re, time
+        data = body.model_dump()
+        # Tự gen ma_hang nếu không có
+        if not data.get("ma_hang"):
+            slug = re.sub(r"[^A-Za-z0-9]", "-", (data["ten_hang"] or "HH"))[:20].upper().strip("-")
+            data["ma_hang"] = f"{slug}-{int(time.time()) % 100000}"
+        row = db.create_hang_hoa(data)
         if not row:
             raise HTTPException(status_code=500, detail="Không thể tạo mặt hàng")
         return row
