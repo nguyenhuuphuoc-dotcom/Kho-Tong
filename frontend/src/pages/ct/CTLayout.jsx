@@ -2,16 +2,17 @@ import React, { useState, useEffect } from 'react'
 import { NavLink, Outlet, useParams, useNavigate } from 'react-router-dom'
 import {
   LayoutDashboard, Download, Upload, Package,
-  Cpu, ChevronLeft, ChevronRight, ArrowLeft, Warehouse
+  Cpu, ChevronLeft, ChevronRight, ArrowLeft, Warehouse, BookOpen
 } from 'lucide-react'
 import { getCongTrinh } from '../../api'
 
 const menuItems = [
-  { icon: LayoutDashboard, label: 'Tong quan', path: '' },
-  { icon: Download,        label: 'Nhap kho',  path: 'nhap-kho' },
-  { icon: Upload,          label: 'Xuat kho',  path: 'xuat-kho' },
-  { icon: Package,         label: 'Ton kho',   path: 'ton-kho' },
-  { icon: Cpu,             label: 'AI Doc PDF', path: 'ai-reader' },
+  { icon: LayoutDashboard, label: 'Tong quan',      path: '' },
+  { icon: Download,        label: 'Nhap kho',        path: 'nhap-kho' },
+  { icon: Upload,          label: 'Xuat kho',        path: 'xuat-kho' },
+  { icon: Package,         label: 'Ton kho',         path: 'ton-kho' },
+  { icon: BookOpen,        label: 'Danh muc hang',   path: 'danh-muc' },
+  { icon: Cpu,             label: 'AI Doc PDF',      path: 'ai-reader' },
 ]
 
 export default function CTLayout() {

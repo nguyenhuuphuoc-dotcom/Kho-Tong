@@ -28,6 +28,7 @@ import CTNhapKho from './pages/ct/CTNhapKho'
 import CTXuatKho from './pages/ct/CTXuatKho'
 import CTTonKho from './pages/ct/CTTonKho'
 import CTAIReader from './pages/ct/CTAIReader'
+import CTDanhMuc from './pages/ct/CTDanhMuc'
 
 // ── Guard: chuyển về /login nếu chưa đăng nhập ───────────────
 function PrivateRoute({ children }) {
@@ -86,6 +87,7 @@ export default function App() {
           <Route path="nhap-kho"  element={<CTNhapKho />} />
           <Route path="xuat-kho"  element={<CTXuatKho />} />
           <Route path="ton-kho"   element={<CTTonKho />} />
+          <Route path="danh-muc"  element={<CTDanhMuc />} />
           <Route path="ai-reader" element={<CTAIReader />} />
         </Route>
       </Routes>

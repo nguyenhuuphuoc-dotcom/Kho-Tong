@@ -1,5 +1,8 @@
 import React, { useState, useRef } from 'react'
-import { Upload, FileSpreadsheet, CheckCircle, XCircle, Loader, AlertTriangle, RotateCcw } from 'lucide-react'
+import {
+  Upload, FileSpreadsheet, CheckCircle, XCircle,
+  Loader, AlertTriangle, RotateCcw
+} from 'lucide-react'
 import { api } from '../api'
 import { useCongTrinh } from '../context/CongTrinhContext'
 import { useAuth } from '../context/AuthContext'
@@ -11,13 +14,13 @@ export default function ImportData() {
   const { user } = useAuth()
   const isAdmin = user?.role === 'admin'
 
-  const [step, setStep] = useState('upload')
-  const [file, setFile] = useState(null)
-  const [ctId, setCtId] = useState(selectedCT?.id || '')
+  const [step, setStep]       = useState('upload')
+  const [file, setFile]       = useState(null)
+  const [ctId, setCtId]       = useState(selectedCT?.id || '')
   const [dragging, setDragging] = useState(false)
   const [preview, setPreview] = useState(null)
-  const [result, setResult] = useState(null)
-  const [error, setError] = useState('')
+  const [result, setResult]   = useState(null)
+  const [error, setError]     = useState('')
   const [loading, setLoading] = useState(false)
   const fileRef = useRef()
 
@@ -26,69 +29,47 @@ export default function ImportData() {
   const handleFile = (f) => {
     if (!f) return
     if (!f.name.endsWith('.xlsx') && !f.name.endsWith('.xls')) {
-      setError('Chỉ hỗ trợ file .xlsx hoặc .xls')
+      setError('Chi ho tro file .xlsx hoac .xls')
       return
     }
-    setFile(f)
-    setError('')
-  }
-
-  const handleDrop = (e) => {
-    e.preventDefault()
-    setDragging(false)
-    handleFile(e.dataTransfer.files[0])
+    setFile(f); setError('')
   }
 
   const handlePreview = async () => {
-    if (!file) { setError('Chưa chọn file'); return }
-    if (!ctId) { setError('Chưa chọn công trình'); return }
-    setLoading(true)
-    setError('')
+    if (!file) { setError('Chua chon file'); return }
+    if (!ctId) { setError('Chua chon cong trinh'); return }
+    setLoading(true); setError('')
     try {
       const fd = new FormData()
       fd.append('file', file)
       fd.append('cong_trinh_id', ctId)
       const res = await api.post('/import/preview/', fd, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-        timeout: 60000,
+        headers: { 'Content-Type': 'multipart/form-data' }, timeout: 60000,
       })
-      setPreview(res.data)
-      setStep('preview')
+      setPreview(res.data); setStep('preview')
     } catch (e) {
-      setError(e.response?.data?.detail || 'Lỗi đọc file. Kiểm tra lại sheet QLTK.')
-    } finally {
-      setLoading(false)
-    }
+      setError(e.response?.data?.detail || 'Loi doc file. Kiem tra lai sheet QLTK.')
+    } finally { setLoading(false) }
   }
 
   const handleImport = async () => {
-    setStep('importing')
-    setLoading(true)
-    setError('')
+    setStep('importing'); setLoading(true); setError('')
     try {
       const fd = new FormData()
       fd.append('file', file)
       fd.append('cong_trinh_id', ctId)
       const res = await api.post('/import/execute/', fd, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-        timeout: 600000,
+        headers: { 'Content-Type': 'multipart/form-data' }, timeout: 600000,
       })
-      setResult(res.data)
-      setStep('done')
+      setResult(res.data); setStep('done')
     } catch (e) {
-      setError(e.response?.data?.detail || 'Lỗi import. Thử lại.')
+      setError(e.response?.data?.detail || 'Loi import. Thu lai.')
       setStep('preview')
-    } finally {
-      setLoading(false)
-    }
+    } finally { setLoading(false) }
   }
 
   const reset = () => {
-    setStep('upload')
-    setFile(null)
-    setPreview(null)
-    setResult(null)
-    setError('')
+    setStep('upload'); setFile(null); setPreview(null); setResult(null); setError('')
   }
 
   if (!isAdmin) return (
@@ -101,11 +82,12 @@ export default function ImportData() {
   )
 
   return (
-    <div className="space-y-6 max-w-3xl">
+    <div className="space-y-6 max-w-2xl">
       <div>
-        <h1 className="text-2xl font-bold text-gray-800">INPUT DU LIEU</h1>
+        <h1 className="text-2xl font-bold text-gray-800">IMPORT DU LIEU HANG LOAT</h1>
         <p className="text-gray-500 mt-1 text-sm">
-          Import hang loat tu file Excel (sheet QLTK) vao he thong
+          Import toan bo du lieu tu file Excel (sheet QLTK) vao mot cong trinh.
+          Dung khi can setup nhanh cong trinh moi hoac cap nhat hang loat.
         </p>
       </div>
 
@@ -135,7 +117,6 @@ export default function ImportData() {
       {/* STEP 1: Upload */}
       {step === 'upload' && (
         <div className="bg-white rounded-xl border border-gray-100 p-6 space-y-5">
-          {/* Chọn công trình */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1.5">
               Cong trinh dich <span className="text-red-500">*</span>
@@ -152,7 +133,6 @@ export default function ImportData() {
             </select>
           </div>
 
-          {/* Upload zone */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1.5">
               File Excel (sheet QLTK) <span className="text-red-500">*</span>
@@ -160,14 +140,12 @@ export default function ImportData() {
             <div
               onDragOver={e => { e.preventDefault(); setDragging(true) }}
               onDragLeave={() => setDragging(false)}
-              onDrop={handleDrop}
+              onDrop={e => { e.preventDefault(); setDragging(false); handleFile(e.dataTransfer.files[0]) }}
               onClick={() => fileRef.current?.click()}
               className={`border-2 border-dashed rounded-xl p-10 text-center cursor-pointer transition-all ${
-                dragging
-                  ? 'border-blue-400 bg-blue-50'
-                  : file
-                    ? 'border-green-400 bg-green-50'
-                    : 'border-gray-200 hover:border-blue-300 hover:bg-gray-50'
+                dragging ? 'border-blue-400 bg-blue-50'
+                : file   ? 'border-green-400 bg-green-50'
+                : 'border-gray-200 hover:border-blue-300 hover:bg-gray-50'
               }`}
             >
               {file ? (
@@ -188,12 +166,12 @@ export default function ImportData() {
               onChange={e => handleFile(e.target.files[0])} />
           </div>
 
-          {/* Hướng dẫn */}
           <div className="bg-amber-50 border border-amber-100 rounded-xl p-4 text-sm text-amber-700 space-y-1">
             <p className="font-semibold">⚠ Luu y truoc khi import:</p>
             <p>• File phai co sheet ten chinh xac la <strong>QLTK</strong></p>
             <p>• Cot A:B = Danh muc, Cot H:L = Nhap kho, Cot N:R = Xuat kho</p>
             <p>• Du lieu cu cua cong trinh se KHONG bi xoa, chi them moi</p>
+            <p>• Viec nhap/xuat hang ngay lam trong <strong>App Con</strong> cua cong trinh</p>
           </div>
 
           {error && (
@@ -207,7 +185,9 @@ export default function ImportData() {
             disabled={loading || !file || !ctId}
             className="w-full py-3 bg-blue-500 text-white rounded-xl font-semibold text-sm hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 transition-colors"
           >
-            {loading ? <><Loader className="w-4 h-4 animate-spin" /> Dang doc file...</> : 'Kiem tra truoc khi import →'}
+            {loading
+              ? <><Loader className="w-4 h-4 animate-spin" /> Dang doc file...</>
+              : 'Kiem tra truoc khi import →'}
           </button>
         </div>
       )}
@@ -225,18 +205,18 @@ export default function ImportData() {
 
           <div className="grid grid-cols-3 gap-4">
             <div className="bg-indigo-50 rounded-xl p-4 text-center">
-              <div className="text-3xl font-bold text-indigo-600">{preview.hang_hoa.toLocaleString()}</div>
+              <div className="text-3xl font-bold text-indigo-600">{preview.hang_hoa?.toLocaleString()}</div>
               <div className="text-sm text-indigo-500 mt-1">Mat hang (danh muc)</div>
             </div>
             <div className="bg-green-50 rounded-xl p-4 text-center">
-              <div className="text-3xl font-bold text-green-600">{preview.phieu_nk.toLocaleString()}</div>
+              <div className="text-3xl font-bold text-green-600">{preview.phieu_nk?.toLocaleString()}</div>
               <div className="text-sm text-green-500 mt-1">Phieu Nhap kho</div>
-              <div className="text-xs text-gray-400 mt-0.5">{preview.dong_nk.toLocaleString()} dong hang</div>
+              <div className="text-xs text-gray-400 mt-0.5">{preview.dong_nk?.toLocaleString()} dong hang</div>
             </div>
             <div className="bg-orange-50 rounded-xl p-4 text-center">
-              <div className="text-3xl font-bold text-orange-600">{preview.phieu_xk.toLocaleString()}</div>
+              <div className="text-3xl font-bold text-orange-600">{preview.phieu_xk?.toLocaleString()}</div>
               <div className="text-sm text-orange-500 mt-1">Phieu Xuat kho</div>
-              <div className="text-xs text-gray-400 mt-0.5">{preview.dong_xk.toLocaleString()} dong hang</div>
+              <div className="text-xs text-gray-400 mt-0.5">{preview.dong_xk?.toLocaleString()} dong hang</div>
             </div>
           </div>
 
@@ -292,23 +272,17 @@ export default function ImportData() {
             <div className="bg-indigo-50 rounded-xl p-4 text-center">
               <div className="text-2xl font-bold text-indigo-600">{result.hang_hoa?.thanh_cong}</div>
               <div className="text-xs text-indigo-500 mt-1">Mat hang them moi</div>
-              {result.hang_hoa?.loi > 0 && (
-                <div className="text-xs text-red-400">{result.hang_hoa.loi} loi</div>
-              )}
+              {result.hang_hoa?.loi > 0 && <div className="text-xs text-red-400">{result.hang_hoa.loi} loi</div>}
             </div>
             <div className="bg-green-50 rounded-xl p-4 text-center">
               <div className="text-2xl font-bold text-green-600">{result.nhap_kho?.thanh_cong}</div>
               <div className="text-xs text-green-500 mt-1">Phieu Nhap kho</div>
-              {result.nhap_kho?.loi > 0 && (
-                <div className="text-xs text-red-400">{result.nhap_kho.loi} loi</div>
-              )}
+              {result.nhap_kho?.loi > 0 && <div className="text-xs text-red-400">{result.nhap_kho.loi} loi</div>}
             </div>
             <div className="bg-orange-50 rounded-xl p-4 text-center">
               <div className="text-2xl font-bold text-orange-600">{result.xuat_kho?.thanh_cong}</div>
               <div className="text-xs text-orange-500 mt-1">Phieu Xuat kho</div>
-              {result.xuat_kho?.loi > 0 && (
-                <div className="text-xs text-red-400">{result.xuat_kho.loi} loi</div>
-              )}
+              {result.xuat_kho?.loi > 0 && <div className="text-xs text-red-400">{result.xuat_kho.loi} loi</div>}
             </div>
           </div>
 
