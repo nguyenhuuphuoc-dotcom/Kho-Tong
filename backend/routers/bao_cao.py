@@ -59,9 +59,9 @@ def bao_cao_tong_hop(
             ton_kho = db.get_ton_kho_all()
         canh_bao = [r for r in ton_kho if (r.get("ton_cuoi") or 0) <= 0]
 
-        # Đếm mặt hàng từ bảng hang_hoa (đáng tin hơn view)
+        # Đếm mặt hàng từ bảng hang_hoa, filter theo CT nếu có
         try:
-            so_mat_hang_dm = len(db.get_all_hang_hoa())
+            so_mat_hang_dm = len(db.get_all_hang_hoa(cong_trinh_id=cong_trinh_id))
         except Exception:
             so_mat_hang_dm = len(ton_kho)
 
@@ -97,7 +97,9 @@ def bao_cao_tong_hop(
         )[:10]
 
         # ── Bảng công trình ──────────────────────────────────
-        cts = db.get_all_cong_trinh()
+        # Nếu filter theo 1 CT cụ thể thì chỉ show CT đó; admin xem tất cả
+        cts = db.get_all_cong_trinh() if not cong_trinh_id else \
+              db.select("cong_trinh", filters=f"id=eq.{cong_trinh_id}")
         ct_map: dict = {}
         for p in phieu_list:
             cid = p.get("cong_trinh_id")

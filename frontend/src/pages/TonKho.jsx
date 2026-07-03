@@ -6,13 +6,14 @@ import { useCongTrinh } from '../context/CongTrinhContext'
 const fmt = (n) => (n ?? 0).toLocaleString('vi-VN')
 
 export default function TonKho() {
-  const { selectedCT } = useCongTrinh()
+  const { selectedCT, ctLoading } = useCongTrinh()
   const [data, setData] = useState([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
   const [showCanhBao, setShowCanhBao] = useState(false)
 
   const loadData = () => {
+    if (ctLoading) return
     setLoading(true)
     const params = selectedCT ? { cong_trinh_id: selectedCT.id } : {}
     getTonKho(params)
@@ -23,7 +24,7 @@ export default function TonKho() {
       .finally(() => setLoading(false))
   }
 
-  useEffect(() => { loadData() }, [selectedCT])
+  useEffect(() => { loadData() }, [selectedCT, ctLoading])
 
   const filtered = data.filter(r => {
     const matchSearch = !search ||

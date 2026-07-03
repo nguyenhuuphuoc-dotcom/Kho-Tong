@@ -19,7 +19,7 @@ function getDefaultDates() {
 }
 
 export default function BaoCao() {
-  const { selectedCT, congTrinhs } = useCongTrinh()
+  const { selectedCT, ctLoading, congTrinhs } = useCongTrinh()
   const defaults = getDefaultDates()
   const [phieuList, setPhieuList] = useState([])
   const [loading, setLoading] = useState(true)
@@ -34,6 +34,7 @@ export default function BaoCao() {
   const ctMap = Object.fromEntries(congTrinhs.map(ct => [ct.id, ct.ten_ct]))
 
   const loadData = () => {
+    if (ctLoading) return
     setLoading(true)
     const params = { limit: 1000 }
     if (selectedCT) params.cong_trinh_id = selectedCT.id
@@ -43,7 +44,7 @@ export default function BaoCao() {
       .finally(() => setLoading(false))
   }
 
-  useEffect(() => { loadData() }, [selectedCT])
+  useEffect(() => { loadData() }, [selectedCT, ctLoading])
 
   const openChiTiet = (phieu) => {
     setSelectedPhieu(phieu)

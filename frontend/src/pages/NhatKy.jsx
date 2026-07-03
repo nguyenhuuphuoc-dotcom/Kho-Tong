@@ -27,7 +27,7 @@ function fmtTime(ts) {
 }
 
 export default function NhatKy() {
-  const { selectedCT, congTrinhs } = useCongTrinh()
+  const { selectedCT, ctLoading, congTrinhs } = useCongTrinh()
   const ctMap = Object.fromEntries((congTrinhs || []).map(ct => [ct.id, ct.ten_ct]))
 
   const [logs, setLogs]       = useState([])
@@ -38,6 +38,7 @@ export default function NhatKy() {
   const PAGE_SIZE = 50
 
   const loadData = () => {
+    if (ctLoading) return
     setLoading(true)
     const params = { limit: PAGE_SIZE, offset: page * PAGE_SIZE }
     if (filterAction) params.action = filterAction
@@ -48,7 +49,7 @@ export default function NhatKy() {
       .finally(() => setLoading(false))
   }
 
-  useEffect(() => { loadData() }, [page, filterAction, selectedCT])
+  useEffect(() => { loadData() }, [page, filterAction, selectedCT, ctLoading])
 
   const filtered = logs.filter(l =>
     !search ||

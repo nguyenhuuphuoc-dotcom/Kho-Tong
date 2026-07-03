@@ -22,7 +22,7 @@ const genSoPhieu = () => {
 const emptyItem = () => ({ ten_hang: '', dvt: 'cai', so_luong: 1, don_gia: 0, thanh_tien: 0 })
 
 export default function PhieuXuat() {
-  const { selectedCT, congTrinhs, isAdmin, dateFrom, dateTo } = useCongTrinh()
+  const { selectedCT, ctLoading, congTrinhs, isAdmin, dateFrom, dateTo } = useCongTrinh()
   const { user } = useAuth()
   const isAdminUser = user?.role === 'admin' || isAdmin
 
@@ -50,6 +50,7 @@ export default function PhieuXuat() {
   const aiRef = useRef()
 
   const loadData = () => {
+    if (ctLoading) return
     setLoading(true)
     const params = { loai: 'XK', limit: 500 }
     if (selectedCT) params.cong_trinh_id = selectedCT.id
@@ -61,7 +62,7 @@ export default function PhieuXuat() {
       .finally(() => setLoading(false))
   }
 
-  useEffect(() => { loadData() }, [selectedCT, dateFrom, dateTo])
+  useEffect(() => { loadData() }, [selectedCT, ctLoading, dateFrom, dateTo])
 
   const openChiTiet = (phieu) => {
     setSelectedPhieu(phieu)

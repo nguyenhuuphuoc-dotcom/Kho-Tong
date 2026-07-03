@@ -4,7 +4,7 @@ import { getHangHoa, createHangHoa } from '../api'
 import { useCongTrinh } from '../context/CongTrinhContext'
 
 export default function DanhMuc() {
-  const { selectedCT, congTrinhs } = useCongTrinh()
+  const { selectedCT, ctLoading, congTrinhs } = useCongTrinh()
   const [data, setData] = useState([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
@@ -17,6 +17,7 @@ export default function DanhMuc() {
   const [form, setForm] = useState({ ma_hang: '', ten_hang: '', dvt: '', nhom: '' })
 
   const loadData = () => {
+    if (ctLoading) return
     setLoading(true)
     const params = { limit: 2000 }
     if (selectedCT) params.cong_trinh_id = selectedCT.id
@@ -28,7 +29,7 @@ export default function DanhMuc() {
       .finally(() => setLoading(false))
   }
 
-  useEffect(() => { loadData() }, [selectedCT])
+  useEffect(() => { loadData() }, [selectedCT, ctLoading])
 
   // Danh sách nhóm duy nhất
   const nhomList = [...new Set(data.map(r => r.nhom).filter(Boolean))].sort()

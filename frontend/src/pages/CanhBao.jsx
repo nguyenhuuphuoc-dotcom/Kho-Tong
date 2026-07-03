@@ -15,12 +15,13 @@ function getMucDo(ton) {
 }
 
 export default function CanhBao() {
-  const { selectedCT } = useCongTrinh()
+  const { selectedCT, ctLoading } = useCongTrinh()
   const [data, setData]       = useState([])
   const [loading, setLoading] = useState(true)
   const [filter, setFilter]   = useState('all') // all | het | rat_thap | thap
 
   const loadData = () => {
+    if (ctLoading) return
     setLoading(true)
     const params = selectedCT ? { cong_trinh_id: selectedCT.id } : {}
     getTonKho(params)
@@ -36,7 +37,7 @@ export default function CanhBao() {
       .finally(() => setLoading(false))
   }
 
-  useEffect(() => { loadData() }, [selectedCT])
+  useEffect(() => { loadData() }, [selectedCT, ctLoading])
 
   const filtered = data.filter(r => {
     const ton = r.ton_cuoi ?? 0
