@@ -1,7 +1,8 @@
-import React, { useState } from 'react'
+import React, { useState, useRef, useEffect } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { Bell, HelpCircle, Calendar, Download, ChevronRight, Home, LogOut } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
+import { useCongTrinh } from '../../context/CongTrinhContext'
 
 const routeNames = {
   '/':             'Bao cao tong hop',
@@ -19,12 +20,55 @@ const routeNames = {
   '/phan-quyen':   'Phan quyen',
 }
 
+const formatVN = (d) => {
+  if (!d) return '?'
+  const [y, m, day] = d.split('-')
+  return `${day}/${m}/${y}`
+}
+
+const PRESETS = [
+  { label: 'T10-12/2025', from: '2025-10-01', to: '2025-12-31' },
+  { label: 'Nam 2025',    from: '2025-01-01', to: '2025-12-31' },
+  { label: 'Nam 2026',    from: '2026-01-01', to: new Date().toISOString().split('T')[0] },
+  { label: 'Tat ca',      from: '2025-01-01', to: new Date().toISOString().split('T')[0] },
+]
+
 export default function Header({ notificationCount = 5 }) {
   const location = useLocation()
   const navigate = useNavigate()
   const { user, logout } = useAuth()
-  const [showMenu, setShowMenu] = useState(false)
-  const pageName = routeNames[location.pathname] || 'Trang chu'
+  const { dateFrom, dateTo, setDateFrom, setDateTo } = useCongTrinh()
+
+  const [showMenu, setShowMenu]     = useState(false)
+  const [showPicker, setShowPicker] = useState(false)
+  const [tempFrom, setTempFrom]     = useState(dateFrom)
+  const [tempTo, setTempTo]         = useState(dateTo)
+
+  const pickerRef = useRef(null)
+  const pageName  = routeNames[location.pathname] || 'Trang chu'
+
+  // Đóng picker khi click bên ngoài
+  useEffect(() => {
+    function handleOutside(e) {
+      if (pickerRef.current && !pickerRef.current.contains(e.target)) {
+        setShowPicker(false)
+      }
+    }
+    document.addEventListener('mousedown', handleOutside)
+    return () => document.removeEventListener('mousedown', handleOutside)
+  }, [])
+
+  const openPicker = () => {
+    setTempFrom(dateFrom)
+    setTempTo(dateTo)
+    setShowPicker(v => !v)
+  }
+
+  const applyDate = () => {
+    if (tempFrom) setDateFrom(tempFrom)
+    if (tempTo)   setDateTo(tempTo)
+    setShowPicker(false)
+  }
 
   const handleLogout = () => {
     logout()
@@ -46,10 +90,86 @@ export default function Header({ notificationCount = 5 }) {
 
       {/* Right side */}
       <div className="flex items-center gap-3">
-        <button className="flex items-center gap-2 px-3 py-1.5 border border-gray-200 rounded-lg text-sm text-gray-600 hover:border-blue-300 hover:text-blue-600 transition-colors bg-white">
-          <Calendar className="w-4 h-4 text-gray-400" />
-          <span>01/06/2026 - 30/06/2026</span>
-        </button>
+
+        {/* ── Date Range Picker ── */}
+        <div className="relative" ref={pickerRef}>
+          <button
+            onClick={openPicker}
+            className={`flex items-center gap-2 px-3 py-1.5 border rounded-lg text-sm transition-colors bg-white
+              ${showPicker
+                ? 'border-blue-400 text-blue-600'
+                : 'border-gray-200 text-gray-600 hover:border-blue-300 hover:text-blue-600'
+              }`}
+          >
+            <Calendar className="w-4 h-4 text-blue-400" />
+            <span className="font-medium">{formatVN(dateFrom)}</span>
+            <span className="text-gray-400 mx-0.5">–</span>
+            <span className="font-medium">{formatVN(dateTo)}</span>
+          </button>
+
+          {showPicker && (
+            <div
+              className="absolute right-0 top-full mt-2 bg-white border border-gray-200 rounded-xl shadow-xl z-50"
+              style={{ width: 280 }}
+            >
+              <div className="px-4 pt-3 pb-2 border-b border-gray-100">
+                <span className="text-sm font-semibold text-gray-700">Chon khoang thoi gian</span>
+              </div>
+
+              <div className="p-4 space-y-3">
+                <div>
+                  <label className="text-xs text-gray-500 mb-1 block">Tu ngay</label>
+                  <input
+                    type="date"
+                    value={tempFrom}
+                    onChange={e => setTempFrom(e.target.value)}
+                    className="w-full border border-gray-200 rounded-lg px-3 py-1.5 text-sm text-gray-700 focus:outline-none focus:border-blue-400"
+                  />
+                </div>
+                <div>
+                  <label className="text-xs text-gray-500 mb-1 block">Den ngay</label>
+                  <input
+                    type="date"
+                    value={tempTo}
+                    onChange={e => setTempTo(e.target.value)}
+                    className="w-full border border-gray-200 rounded-lg px-3 py-1.5 text-sm text-gray-700 focus:outline-none focus:border-blue-400"
+                  />
+                </div>
+
+                {/* Quick presets */}
+                <div>
+                  <div className="text-xs text-gray-400 mb-1.5">Chon nhanh</div>
+                  <div className="flex flex-wrap gap-1.5">
+                    {PRESETS.map(p => (
+                      <button
+                        key={p.label}
+                        onClick={() => { setTempFrom(p.from); setTempTo(p.to) }}
+                        className="text-xs px-2.5 py-1 bg-gray-100 text-gray-600 rounded-full hover:bg-blue-100 hover:text-blue-600 transition-colors"
+                      >
+                        {p.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="flex gap-2 pt-1">
+                  <button
+                    onClick={applyDate}
+                    className="flex-1 bg-blue-500 text-white text-sm py-2 rounded-lg hover:bg-blue-600 transition-colors font-semibold"
+                  >
+                    Ap dung
+                  </button>
+                  <button
+                    onClick={() => setShowPicker(false)}
+                    className="flex-1 border border-gray-200 text-gray-600 text-sm py-2 rounded-lg hover:bg-gray-50 transition-colors"
+                  >
+                    Huy
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
 
         <button className="flex items-center gap-2 px-4 py-1.5 bg-blue-500 text-white rounded-lg text-sm font-medium hover:bg-blue-600 transition-colors">
           <Download className="w-4 h-4" />

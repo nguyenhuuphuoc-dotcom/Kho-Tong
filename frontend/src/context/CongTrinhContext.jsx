@@ -7,6 +7,9 @@ export function CongTrinhProvider({ children }) {
   const [congTrinhs, setCongTrinhs]   = useState([])
   const [selectedCT, setSelectedCT]   = useState(null)
   const [isAdmin, setIsAdmin]         = useState(false)
+  const today = new Date().toISOString().split('T')[0]
+  const [dateFrom, setDateFrom]       = useState('2025-01-01')
+  const [dateTo, setDateTo]           = useState(today)
 
   const loadCongTrinh = () => {
     api.get('/auth/my-congtrinh')
@@ -26,7 +29,7 @@ export function CongTrinhProvider({ children }) {
   useEffect(() => { loadCongTrinh() }, [])
 
   return (
-    <CongTrinhContext.Provider value={{ congTrinhs, selectedCT, setSelectedCT, isAdmin, loadCongTrinh }}>
+    <CongTrinhContext.Provider value={{ congTrinhs, selectedCT, setSelectedCT, isAdmin, loadCongTrinh, dateFrom, dateTo, setDateFrom, setDateTo }}>
       {children}
     </CongTrinhContext.Provider>
   )

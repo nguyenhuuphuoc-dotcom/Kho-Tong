@@ -40,7 +40,7 @@ function KPICard({ icon: Icon, iconBg, title, value, subtitle, valueColor, loadi
 }
 
 export default function Dashboard() {
-  const { selectedCT } = useCongTrinh()
+  const { selectedCT, dateFrom, dateTo } = useCongTrinh()
   const [chartMode, setChartMode] = useState('month')
   const [loading, setLoading] = useState(true)
   const [kpi, setKpi] = useState(null)
@@ -52,9 +52,10 @@ export default function Dashboard() {
   const loadData = () => {
     setLoading(true)
     const ctParam = selectedCT ? { cong_trinh_id: selectedCT.id } : {}
+    const dateParam = { date_from: dateFrom, date_to: dateTo }
     Promise.all([
-      getBaoCaoTongHop(ctParam),
-      getBieuDo({ period: chartMode, ...ctParam })
+      getBaoCaoTongHop({ ...ctParam, ...dateParam }),
+      getBieuDo({ period: chartMode, from_date: dateFrom, to_date: dateTo, ...ctParam })
     ])
       .then(([bcRes, bdRes]) => {
         const bc = bcRes.data || {}
@@ -68,7 +69,7 @@ export default function Dashboard() {
       .finally(() => setLoading(false))
   }
 
-  useEffect(() => { loadData() }, [chartMode, selectedCT])
+  useEffect(() => { loadData() }, [chartMode, selectedCT, dateFrom, dateTo])
 
   const phieuNhap = kpi?.so_phieu_nk || 0
   const phieuXuat = kpi?.so_phieu_xk || 0

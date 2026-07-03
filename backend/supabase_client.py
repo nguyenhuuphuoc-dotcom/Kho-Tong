@@ -96,7 +96,8 @@ def upsert_cong_trinh(ma_ct: str, ten_ct: str, dia_chi: str = "", ghi_chu: str =
 
 def get_phieu_list(cong_trinh_id: int = None, loai: str = None,
                    search: str = None, limit: int = 200,
-                   offset: int = 0) -> list:
+                   offset: int = 0,
+                   date_from: str = None, date_to: str = None) -> list:
     extra = ""
     if cong_trinh_id:
         extra += f"&cong_trinh_id=eq.{cong_trinh_id}"
@@ -104,6 +105,10 @@ def get_phieu_list(cong_trinh_id: int = None, loai: str = None,
         extra += f"&loai=eq.{loai}"
     if search:
         extra += f"&or=(so_phieu.ilike.*{search}*,doi_tac.ilike.*{search}*)"
+    if date_from:
+        extra += f"&ngay=gte.{date_from}"
+    if date_to:
+        extra += f"&ngay=lte.{date_to}"
     page_size = min(limit, 1000)
     rows = select("phieu", query="*",
                   filters=f"limit={page_size}&offset={offset}{extra}",

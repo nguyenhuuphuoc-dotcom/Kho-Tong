@@ -36,6 +36,8 @@ def list_phieu(
     cong_trinh_id: Optional[int] = Query(None, description="Lọc theo công trình"),
     loai: Optional[str] = Query(None, description="NK hoặc XK"),
     search: Optional[str] = Query(None, description="Tìm theo số phiếu hoặc đối tác"),
+    date_from: Optional[str] = Query(None, description="Từ ngày YYYY-MM-DD"),
+    date_to: Optional[str] = Query(None, description="Đến ngày YYYY-MM-DD"),
     limit: int = Query(100, ge=1, le=1000),
     offset: int = Query(0, ge=0),
 ):
@@ -46,7 +48,9 @@ def list_phieu(
             loai=loai,
             search=search,
             limit=limit,
-            offset=offset
+            offset=offset,
+            date_from=date_from,
+            date_to=date_to,
         )
         return {"data": rows, "total": len(rows), "limit": limit, "offset": offset}
     except Exception as e:

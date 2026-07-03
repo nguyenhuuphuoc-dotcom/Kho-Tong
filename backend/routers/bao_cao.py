@@ -21,14 +21,21 @@ def _parse_date(s: str) -> Optional[date]:
 
 
 @router.get("/tong-hop")
-def bao_cao_tong_hop(cong_trinh_id: Optional[int] = Query(None)):
+def bao_cao_tong_hop(
+    cong_trinh_id: Optional[int] = Query(None),
+    date_from: Optional[str] = Query(None, description="Từ ngày YYYY-MM-DD"),
+    date_to:   Optional[str] = Query(None, description="Đến ngày YYYY-MM-DD"),
+):
     """
     Thống kê tổng hợp: 5 KPI cards + top vật tư + bảng công trình + cảnh báo tồn kho thấp.
     Nếu có cong_trinh_id thì filter theo công trình đó.
     """
     try:
         # ── Phiếu ────────────────────────────────────────────
-        phieu_list = db.get_phieu_list(cong_trinh_id=cong_trinh_id, limit=5000)
+        phieu_list = db.get_phieu_list(
+            cong_trinh_id=cong_trinh_id, limit=5000,
+            date_from=date_from, date_to=date_to
+        )
 
         # ── KPI cơ bản ───────────────────────────────────────
         if cong_trinh_id:
