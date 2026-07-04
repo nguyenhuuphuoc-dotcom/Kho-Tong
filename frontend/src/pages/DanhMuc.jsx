@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
-import { Box, Search, RefreshCw, Plus, X } from 'lucide-react'
-import { getHangHoa, createHangHoa } from '../api'
+import { Box, Search, RefreshCw, Plus, X, Pencil, Trash2 } from 'lucide-react'
+import { getHangHoa, createHangHoa, updateHangHoa, deleteHangHoa } from '../api'
 import { useCongTrinh } from '../context/CongTrinhContext'
 
 export default function DanhMuc() {
@@ -16,22 +16,25 @@ export default function DanhMuc() {
   const [createError, setCreateError] = useState('')
   const [form, setForm] = useState({ ma_hang: '', ten_hang: '', dvt: '', nhom: '' })
 
+  // Edit modal
+  const [editItem, setEditItem] = useState(null)
+  const [editForm, setEditForm] = useState({ ten_hang: '', dvt: '', nhom: '' })
+  const [editSaving, setEditSaving] = useState(false)
+  const [editMsg, setEditMsg] = useState(null)
+
   const loadData = () => {
     if (ctLoading) return
     setLoading(true)
     const params = { limit: 2000 }
     if (selectedCT) params.cong_trinh_id = selectedCT.id
     getHangHoa(params)
-      .then(res => {
-        setData(res.data?.data || [])
-      })
+      .then(res => setData(res.data?.data || []))
       .catch(err => console.error(err))
       .finally(() => setLoading(false))
   }
 
   useEffect(() => { loadData() }, [selectedCT, ctLoading])
 
-  // Danh sách nhóm duy nhất
   const nhomList = [...new Set(data.map(r => r.nhom).filter(Boolean))].sort()
   const ctMap = Object.fromEntries((congTrinhs || []).map(ct => [ct.id, ct.ten_ct]))
 
@@ -52,8 +55,7 @@ export default function DanhMuc() {
   const handleCreate = async () => {
     if (!form.ten_hang.trim()) { setCreateError('Nhập tên hàng hóa'); return }
     if (!selectedCT) { setCreateError('Chưa chọn công trình'); return }
-    setCreating(true)
-    setCreateError('')
+    setCreating(true); setCreateError('')
     try {
       await createHangHoa({
         ma_hang: form.ma_hang.trim() || undefined,
@@ -66,8 +68,35 @@ export default function DanhMuc() {
       loadData()
     } catch (e) {
       setCreateError(e.response?.data?.detail || 'Lỗi tạo hàng hóa. Thử lại.')
-    } finally {
-      setCreating(false)
+    } finally { setCreating(false) }
+  }
+
+  const openEdit = (r) => {
+    setEditItem(r)
+    setEditForm({ ten_hang: r.ten_hang || '', dvt: r.dvt || '', nhom: r.nhom || '' })
+    setEditMsg(null)
+  }
+
+  const handleEditSave = async () => {
+    if (!editForm.ten_hang.trim()) { setEditMsg({ err: true, text: 'Nhập tên hàng hóa' }); return }
+    setEditSaving(true); setEditMsg(null)
+    try {
+      await updateHangHoa(editItem.ma_hang, editForm)
+      setData(d => d.map(r => r.ma_hang === editItem.ma_hang ? { ...r, ...editForm } : r))
+      setEditMsg({ err: false, text: 'Đã cập nhật!' })
+      setTimeout(() => { setEditItem(null); setEditMsg(null) }, 800)
+    } catch (e) {
+      setEditMsg({ err: true, text: e.response?.data?.detail || 'Lỗi cập nhật' })
+    } finally { setEditSaving(false) }
+  }
+
+  const handleDelete = async (ma, ten) => {
+    if (!window.confirm(`Xóa "${ten}"?`)) return
+    try {
+      await deleteHangHoa(ma)
+      setData(d => d.filter(r => r.ma_hang !== ma))
+    } catch (e) {
+      alert('Lỗi xóa: ' + (e.response?.data?.detail || e.message))
     }
   }
 
@@ -156,13 +185,14 @@ export default function DanhMuc() {
                 <th className="text-left px-4 py-3 text-gray-500 font-medium">Nhóm</th>
                 <th className="text-left px-4 py-3 text-gray-500 font-medium">DVT</th>
                 <th className="text-left px-4 py-3 text-gray-500 font-medium">Công trình</th>
+                <th className="w-20"></th>
               </tr>
             </thead>
             <tbody>
               {loading
-                ? <tr><td colSpan={6} className="py-10 text-center text-gray-400">Đang tải dữ liệu...</td></tr>
+                ? <tr><td colSpan={7} className="py-10 text-center text-gray-400">Đang tải dữ liệu...</td></tr>
                 : filtered.length === 0
-                  ? <tr><td colSpan={6} className="py-10 text-center text-gray-400">Không có hàng hóa</td></tr>
+                  ? <tr><td colSpan={7} className="py-10 text-center text-gray-400">Không có hàng hóa</td></tr>
                   : filtered.map((r, i) => (
                       <tr key={r.ma_hang || i} className="border-b border-gray-50 hover:bg-gray-50 transition-colors">
                         <td className="px-4 py-2.5 text-gray-400 text-xs">{i + 1}</td>
@@ -176,6 +206,18 @@ export default function DanhMuc() {
                         </td>
                         <td className="px-4 py-2.5 text-gray-500 text-xs">{r.dvt || '—'}</td>
                         <td className="px-4 py-2.5 text-gray-500 text-xs">{ctMap[r.cong_trinh_id] || '—'}</td>
+                        <td className="px-2 py-2.5">
+                          <div className="flex gap-1">
+                            <button onClick={() => openEdit(r)}
+                              className="p-1.5 text-gray-300 hover:text-indigo-500 hover:bg-indigo-50 rounded-lg transition-colors">
+                              <Pencil className="w-3.5 h-3.5" />
+                            </button>
+                            <button onClick={() => handleDelete(r.ma_hang, r.ten_hang)}
+                              className="p-1.5 text-gray-300 hover:text-red-400 hover:bg-red-50 rounded-lg transition-colors">
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        </td>
                       </tr>
                     ))
               }
@@ -197,7 +239,6 @@ export default function DanhMuc() {
                 <X className="w-5 h-5" />
               </button>
             </div>
-
             <div className="p-5 space-y-4">
               <div>
                 <label className="block text-xs font-medium text-gray-600 mb-1">Tên hàng hóa *</label>
@@ -230,11 +271,8 @@ export default function DanhMuc() {
                   placeholder="Ví dụ: Vật liệu xây dựng, Thiết bị điện..." />
               </div>
             </div>
-
             <div className="p-4 border-t bg-gray-50 flex items-center justify-between">
-              <div>
-                {createError && <p className="text-red-500 text-xs">{createError}</p>}
-              </div>
+              <div>{createError && <p className="text-red-500 text-xs">{createError}</p>}</div>
               <div className="flex gap-2">
                 <button onClick={() => setShowCreate(false)}
                   className="px-4 py-2 border border-gray-200 text-gray-600 rounded-lg text-sm hover:bg-gray-50">
@@ -243,6 +281,63 @@ export default function DanhMuc() {
                 <button onClick={handleCreate} disabled={creating}
                   className="px-5 py-2 bg-indigo-500 hover:bg-indigo-600 text-white rounded-lg text-sm font-medium disabled:opacity-50">
                   {creating ? 'Đang lưu...' : 'Tạo hàng hóa'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal sửa hàng hóa */}
+      {editItem && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4"
+          onClick={e => { if (e.target === e.currentTarget) setEditItem(null) }}>
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-md">
+            <div className="flex items-center justify-between p-5 border-b">
+              <div>
+                <h3 className="font-semibold text-gray-800">Sửa hàng hóa</h3>
+                <p className="text-xs text-gray-400 font-mono mt-0.5">{editItem.ma_hang}</p>
+              </div>
+              <button onClick={() => setEditItem(null)} className="p-1 hover:bg-gray-100 rounded-lg">
+                <X className="w-4 h-4 text-gray-400" />
+              </button>
+            </div>
+            <div className="p-5 space-y-3">
+              <div>
+                <label className="text-xs text-gray-500 mb-1 block">Tên hàng hóa *</label>
+                <input value={editForm.ten_hang}
+                  onChange={e => setEditForm(f => ({ ...f, ten_hang: e.target.value }))}
+                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-indigo-400" />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-xs text-gray-500 mb-1 block">Đơn vị tính</label>
+                  <input value={editForm.dvt}
+                    onChange={e => setEditForm(f => ({ ...f, dvt: e.target.value }))}
+                    placeholder="cái, kg, m..."
+                    className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-indigo-400" />
+                </div>
+                <div>
+                  <label className="text-xs text-gray-500 mb-1 block">Nhóm</label>
+                  <input value={editForm.nhom}
+                    onChange={e => setEditForm(f => ({ ...f, nhom: e.target.value }))}
+                    className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-indigo-400" />
+                </div>
+              </div>
+              {editMsg && (
+                <div className={`text-sm px-3 py-2 rounded-lg ${editMsg.err ? 'bg-red-50 text-red-600' : 'bg-green-50 text-green-700'}`}>
+                  {editMsg.err ? '✗' : '✓'} {editMsg.text}
+                </div>
+              )}
+              <div className="flex gap-2 pt-1">
+                <button onClick={() => setEditItem(null)}
+                  className="flex-1 py-2 border border-gray-200 text-gray-600 rounded-lg text-sm hover:bg-gray-50">
+                  Hủy
+                </button>
+                <button onClick={handleEditSave} disabled={editSaving}
+                  className="flex-1 py-2 bg-indigo-500 text-white rounded-lg text-sm font-medium hover:bg-indigo-600 disabled:opacity-50 flex items-center justify-center gap-2">
+                  {editSaving ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Pencil className="w-4 h-4" />}
+                  Lưu thay đổi
                 </button>
               </div>
             </div>
