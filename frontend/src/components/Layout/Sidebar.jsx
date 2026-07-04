@@ -108,7 +108,9 @@ export default function Sidebar({ collapsed, onToggle }) {
           <div className="flex items-center gap-2">
             <img src="/logo-hpcons.png" alt="HP Cons" className="h-9 w-auto object-contain flex-shrink-0" />
             <div>
-              <div className="font-bold text-gray-800 text-sm leading-tight">HPCons AppTong</div>
+              <div className="font-bold text-gray-800 text-sm leading-tight">
+                {isAdminUser ? 'HPCons App Tổng' : `HPCons - ${selectedCT?.ten_ct || ''}`}
+              </div>
               <div className="text-xs text-gray-400 leading-tight">Quản lý kho v2.0</div>
             </div>
           </div>
@@ -262,7 +264,7 @@ export default function Sidebar({ collapsed, onToggle }) {
       {/* Footer */}
       {!collapsed && (
         <div className="px-4 py-3 border-t border-gray-100">
-          <p className="text-xs text-gray-400 text-center">© 2026 HPCons AppTong</p>
+          <p className="text-xs text-gray-400 text-center">© 2026 {isAdminUser ? 'HPCons App Tổng' : `HPCons - ${selectedCT?.ten_ct || ''}`}</p>
           <p className="text-xs text-gray-400 text-center">Phiên bản 2.0.0</p>
         </div>
       )}

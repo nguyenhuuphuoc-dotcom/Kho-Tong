@@ -15,7 +15,7 @@ echo [2/3] Add tat ca thay doi...
 git add -A
 
 echo [3/3] Commit va push...
-git commit -m "feat: TonKho CRUD + them dau tieng Viet toan bo UI + edit/xoa danh muc + autocomplete"
+git commit -m "fix: autocomplete ma hang + tim kiem khong dau + ten logo theo role user/admin"
 git push
 
 echo.

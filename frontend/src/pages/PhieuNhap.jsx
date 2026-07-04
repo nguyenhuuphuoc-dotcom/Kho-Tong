@@ -21,6 +21,8 @@ const genSoPhieu = () => {
 }
 const emptyItem = () => ({ ten_hang: '', dvt: 'cái', so_luong: 1, don_gia: 0, thanh_tien: 0 })
 
+const normalize = (s) => (s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/đ/g,'d').replace(/Đ/g,'D').toLowerCase()
+
 export default function PhieuNhap() {
   const { selectedCT, ctLoading, congTrinhs, isAdmin, dateFrom, dateTo } = useCongTrinh()
   const { user } = useAuth()
@@ -107,12 +109,12 @@ export default function PhieuNhap() {
   }
 
   const getDropdownOptions = (idx) => {
-    const kw = (items[idx]?.ten_hang || '').toLowerCase().trim()
-    if (!kw) return []
+    const kw = normalize(items[idx]?.ten_hang || '').trim()
+    if (!kw) return hangHoaList.slice(0, 20)
     return hangHoaList.filter(h =>
-      (h.ten_hang || '').toLowerCase().includes(kw) ||
-      (h.ma_hang  || '').toLowerCase().includes(kw)
-    ).slice(0, 10)
+      normalize(h.ten_hang).includes(kw) ||
+      (h.ma_hang || '').toLowerCase().includes(kw)
+    ).slice(0, 25)
   }
 
   const selectHangHoa = (idx, hh) => {
@@ -359,18 +361,18 @@ export default function PhieuNhap() {
             </div>
             <div className="overflow-auto flex-1 p-5">
               {loadingChiTiet
-                ? <div className="text-center text-gray-400 py-8">Dang tai...</div>
+                ? <div className="text-center text-gray-400 py-8">Đang tải...</div>
                 : chiTiet.length === 0
-                  ? <div className="text-center text-gray-400 py-8">Khong co chi tiet</div>
+                  ? <div className="text-center text-gray-400 py-8">Không có chi tiết</div>
                   : <table className="w-full text-sm">
                       <thead className="bg-gray-50 sticky top-0">
                         <tr>
                           <th className="text-left p-2 text-gray-500 font-medium">#</th>
-                          <th className="text-left p-2 text-gray-500 font-medium">Ten hang</th>
+                          <th className="text-left p-2 text-gray-500 font-medium">Tên hàng</th>
                           <th className="text-right p-2 text-gray-500 font-medium">SL</th>
-                          <th className="text-left p-2 text-gray-500 font-medium">DVT</th>
-                          <th className="text-right p-2 text-gray-500 font-medium">Don gia</th>
-                          <th className="text-right p-2 text-gray-500 font-medium">Thanh tien</th>
+                          <th className="text-left p-2 text-gray-500 font-medium">ĐVT</th>
+                          <th className="text-right p-2 text-gray-500 font-medium">Đơn giá</th>
+                          <th className="text-right p-2 text-gray-500 font-medium">Thành tiền</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -389,8 +391,8 @@ export default function PhieuNhap() {
               }
             </div>
             <div className="p-4 border-t bg-gray-50 flex justify-between items-center text-sm">
-              <span className="text-gray-500">{chiTiet.length} dong hang</span>
-              <span className="font-bold text-blue-700 text-base">Tong: {formatVND(selectedPhieu.tong_tien)}</span>
+              <span className="text-gray-500">{chiTiet.length} dòng hàng</span>
+              <span className="font-bold text-blue-700 text-base">Tổng: {formatVND(selectedPhieu.tong_tien)}</span>
             </div>
           </div>
         </div>
@@ -402,7 +404,7 @@ export default function PhieuNhap() {
           <div className="bg-white rounded-xl shadow-xl w-full max-w-3xl max-h-[90vh] flex flex-col">
             <div className="flex items-center justify-between p-5 border-b">
               <div>
-                <h3 className="font-bold text-gray-800 text-lg">Tao Phieu Nhap Kho</h3>
+                <h3 className="font-bold text-gray-800 text-lg">Tạo Phiếu Nhập Kho</h3>
                 <p className="text-sm text-teal-600 font-medium">📌 {selectedCT?.ten_ct}</p>
               </div>
               <button onClick={() => setShowCreate(false)} className="p-1 hover:bg-gray-100 rounded-lg text-gray-400">
@@ -414,11 +416,11 @@ export default function PhieuNhap() {
               <div className="flex gap-1 p-1 bg-gray-100 rounded-lg">
                 <button onClick={() => setCreateMode('manual')}
                   className={"flex-1 py-1.5 px-3 rounded-md text-xs font-medium transition-colors " + (createMode === 'manual' ? 'bg-white text-gray-800 shadow-sm' : 'text-gray-500 hover:text-gray-700')}>
-                  Nhap tay
+                  Nhập tay
                 </button>
                 <button onClick={() => setCreateMode('ai')}
                   className={"flex-1 py-1.5 px-3 rounded-md text-xs font-medium flex items-center justify-center gap-1.5 transition-colors " + (createMode === 'ai' ? 'bg-white text-gray-800 shadow-sm' : 'text-gray-500 hover:text-gray-700')}>
-                  <Bot className="w-3.5 h-3.5" /> Doc bang AI
+                  <Bot className="w-3.5 h-3.5" /> Đọc bảng AI
                 </button>
               </div>
 
@@ -432,8 +434,8 @@ export default function PhieuNhap() {
                     onDrop={e => { e.preventDefault(); setAiDragging(false); var f = e.dataTransfer.files[0]; if (f) { setAiFile(f); setAiError(''); } }}
                   >
                     <Download className="w-8 h-8 text-gray-300 mx-auto mb-2" />
-                    <p className="text-gray-600 text-sm font-medium">Click hoac keo file vao day</p>
-                    <p className="text-gray-400 text-xs mt-1">Ho tro: JPG, PNG, PDF</p>
+                    <p className="text-gray-600 text-sm font-medium">Click hoặc kéo file vào đây</p>
+                    <p className="text-gray-400 text-xs mt-1">Hỗ trợ: JPG, PNG, PDF</p>
                     <input ref={aiRef} type="file" className="hidden" accept=".jpg,.jpeg,.png,.pdf"
                       onChange={e => { var f = e.target.files[0]; if (f) { setAiFile(f); setAiError(''); } }} />
                   </div>
@@ -450,9 +452,9 @@ export default function PhieuNhap() {
                   {aiError && <p className="text-red-500 text-xs bg-red-50 p-2 rounded-lg">{aiError}</p>}
                   <button onClick={handleAiRead} disabled={!aiFile || aiLoading}
                     className="w-full py-2.5 bg-blue-500 text-white rounded-xl font-medium text-sm hover:bg-blue-600 disabled:opacity-50 flex items-center justify-center gap-2">
-                    {aiLoading ? <><Loader className="w-4 h-4 animate-spin" /> AI dang doc...</> : <><Bot className="w-4 h-4" /> Doc va dien form tu dong</>}
+                    {aiLoading ? <><Loader className="w-4 h-4 animate-spin" /> AI đang đọc...</> : <><Bot className="w-4 h-4" /> Đọc và điền form tự động</>}
                   </button>
-                  <p className="text-xs text-gray-400 text-center">AI doc xong se chuyen sang Nhap tay de kiem tra</p>
+                  <p className="text-xs text-gray-400 text-center">AI đọc xong sẽ chuyển sang Nhập tay để kiểm tra</p>
                 </div>
               )}
 
@@ -460,32 +462,32 @@ export default function PhieuNhap() {
                 <>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-xs font-medium text-gray-600 mb-1">So phieu *</label>
+                      <label className="block text-xs font-medium text-gray-600 mb-1">Số phiếu *</label>
                       <input value={form.so_phieu} onChange={e => setForm(f => ({...f, so_phieu: e.target.value}))}
                         className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-blue-400" placeholder="NK-20260702-001" />
                     </div>
                     <div>
-                      <label className="block text-xs font-medium text-gray-600 mb-1">Ngay *</label>
+                      <label className="block text-xs font-medium text-gray-600 mb-1">Ngày *</label>
                       <input type="date" value={form.ngay} onChange={e => setForm(f => ({...f, ngay: e.target.value}))}
                         className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-blue-400" />
                     </div>
                     <div>
-                      <label className="block text-xs font-medium text-gray-600 mb-1">Nha cung cap</label>
+                      <label className="block text-xs font-medium text-gray-600 mb-1">Nhà cung cấp</label>
                       <input value={form.doi_tac} onChange={e => setForm(f => ({...f, doi_tac: e.target.value}))}
-                        className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-blue-400" placeholder="Ten nha cung cap..." />
+                        className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-blue-400" placeholder="Tên nhà cung cấp..." />
                     </div>
                     <div>
-                      <label className="block text-xs font-medium text-gray-600 mb-1">Ghi chu</label>
+                      <label className="block text-xs font-medium text-gray-600 mb-1">Ghi chú</label>
                       <input value={form.ghi_chu} onChange={e => setForm(f => ({...f, ghi_chu: e.target.value}))}
-                        className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-blue-400" placeholder="Ghi chu them..." />
+                        className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-blue-400" placeholder="Ghi chú thêm..." />
                     </div>
                   </div>
                   <div>
                     <div className="flex items-center justify-between mb-2">
-                      <label className="text-xs font-medium text-gray-600">Danh sach hang hoa *</label>
+                      <label className="text-xs font-medium text-gray-600">Danh sách hàng hóa *</label>
                       <button onClick={() => setItems(prev => [...prev, emptyItem()])}
                         className="flex items-center gap-1 text-xs text-blue-600 hover:text-blue-700 font-medium">
-                        <Plus className="w-3 h-3" /> Them dong
+                        <Plus className="w-3 h-3" /> Thêm dòng
                       </button>
                     </div>
                     <div className="border border-gray-200 rounded-lg overflow-hidden">
@@ -493,11 +495,11 @@ export default function PhieuNhap() {
                         <thead className="bg-gray-50">
                           <tr>
                             <th className="text-center px-3 py-2 text-gray-500 font-medium w-8">#</th>
-                            <th className="text-left px-3 py-2 text-gray-500 font-medium">Ten hang *</th>
+                            <th className="text-left px-3 py-2 text-gray-500 font-medium">Tên hàng *</th>
                             <th className="text-center px-2 py-2 text-gray-500 font-medium w-16">SL</th>
-                            <th className="text-center px-2 py-2 text-gray-500 font-medium w-16">DVT</th>
-                            <th className="text-center px-2 py-2 text-gray-500 font-medium w-24">Don gia</th>
-                            <th className="text-right px-3 py-2 text-gray-500 font-medium w-24">Thanh tien</th>
+                            <th className="text-center px-2 py-2 text-gray-500 font-medium w-16">ĐVT</th>
+                            <th className="text-center px-2 py-2 text-gray-500 font-medium w-24">Đơn giá</th>
+                            <th className="text-right px-3 py-2 text-gray-500 font-medium w-24">Thành tiền</th>
                             <th className="w-8"></th>
                           </tr>
                         </thead>
@@ -511,7 +513,7 @@ export default function PhieuNhap() {
                                   onChange={e => { updateItem(i, 'ten_hang', e.target.value); setActiveDropdown(i) }}
                                   onFocus={() => setActiveDropdown(i)}
                                   onBlur={() => setTimeout(() => setActiveDropdown(null), 150)}
-                                  placeholder="Ten vat tu..."
+                                  placeholder="Tên vật tư..."
                                   className="w-full px-2 py-1.5 border border-gray-200 rounded text-xs focus:outline-none focus:border-blue-300"
                                 />
                                 {activeDropdown === i && getDropdownOptions(i).length > 0 && (
@@ -520,6 +522,7 @@ export default function PhieuNhap() {
                                       <button key={j} type="button"
                                         onMouseDown={() => selectHangHoa(i, hh)}
                                         className="w-full text-left px-3 py-2 hover:bg-blue-50 text-xs flex items-center gap-2 border-b border-gray-50 last:border-0">
+                                        <span className="font-mono text-gray-400 flex-shrink-0 w-20 truncate">{hh.ma_hang}</span>
                                         <span className="text-gray-800 flex-1 truncate">{hh.ten_hang}</span>
                                         <span className="text-blue-400 font-mono flex-shrink-0">{hh.dvt}</span>
                                       </button>
@@ -549,13 +552,13 @@ export default function PhieuNhap() {
             <div className="p-4 border-t bg-gray-50 flex items-center justify-between">
               <div>
                 {createError && <p className="text-red-500 text-xs mb-1">{createError}</p>}
-                {createMode === 'manual' && <p className="text-base font-bold text-blue-700">Tong: {formatVND(tongItems)}</p>}
+                {createMode === 'manual' && <p className="text-base font-bold text-blue-700">Tổng: {formatVND(tongItems)}</p>}
               </div>
               <div className="flex gap-2">
-                <button onClick={() => setShowCreate(false)} className="px-4 py-2 border border-gray-200 text-gray-600 rounded-lg text-sm hover:bg-gray-50">Huy</button>
+                <button onClick={() => setShowCreate(false)} className="px-4 py-2 border border-gray-200 text-gray-600 rounded-lg text-sm hover:bg-gray-50">Hủy</button>
                 {createMode === 'manual' && (
                   <button onClick={handleCreate} disabled={creating} className="px-5 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg text-sm font-medium disabled:opacity-50">
-                    {creating ? 'Dang luu...' : 'Luu Phieu NK'}
+                    {creating ? 'Đang lưu...' : 'Lưu Phiếu NK'}
                   </button>
                 )}
               </div>

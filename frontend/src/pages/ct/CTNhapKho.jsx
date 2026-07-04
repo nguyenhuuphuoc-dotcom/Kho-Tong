@@ -15,6 +15,7 @@ function formatVND(n) {
 const today = () => new Date().toISOString().slice(0, 10)
 
 const emptyItem = () => ({ ten_hang: '', dvt: 'cái', so_luong: '', don_gia: '', thanh_tien: '' })
+const normalize = (s) => (s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/đ/g,'d').replace(/Đ/g,'D').toLowerCase()
 
 export default function CTNhapKho() {
   const { ctId } = useOutletContext() || {}
@@ -340,9 +341,9 @@ export default function CTNhapKho() {
                             className="w-full border border-gray-200 rounded px-2 py-1 text-xs focus:outline-none focus:border-green-300"
                           />
                           {openSuggest === i && (() => {
-                            const q = (it.ten_hang || '').toLowerCase()
+                            const q = normalize(it.ten_hang)
                             const matches = hangHoaList.filter(h =>
-                              !q || (h.ten_hang||'').toLowerCase().includes(q) || (h.ma_hang||'').toLowerCase().includes(q)
+                              !q || normalize(h.ten_hang).includes(q) || (h.ma_hang||'').toLowerCase().includes(q)
                             ).slice(0, 25)
                             if (!matches.length) return null
                             return (

@@ -20,6 +20,7 @@ const genSoPhieu = () => {
   return `XK-${ymd}-${String(Math.floor(Math.random()*900)+100)}`
 }
 const emptyItem = () => ({ ten_hang: '', dvt: 'cái', so_luong: 1, don_gia: 0, thanh_tien: 0 })
+const normalize = (s) => (s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/đ/g,'d').replace(/Đ/g,'D').toLowerCase()
 
 export default function PhieuXuat() {
   const { selectedCT, ctLoading, congTrinhs, isAdmin, dateFrom, dateTo } = useCongTrinh()
@@ -107,12 +108,12 @@ export default function PhieuXuat() {
   }
 
   const getDropdownOptions = (idx) => {
-    const kw = (items[idx]?.ten_hang || '').toLowerCase().trim()
-    if (!kw) return []
+    const kw = normalize(items[idx]?.ten_hang || '').trim()
+    if (!kw) return hangHoaList.slice(0, 20)
     return hangHoaList.filter(h =>
-      (h.ten_hang || '').toLowerCase().includes(kw) ||
-      (h.ma_hang  || '').toLowerCase().includes(kw)
-    ).slice(0, 10)
+      normalize(h.ten_hang).includes(kw) ||
+      (h.ma_hang || '').toLowerCase().includes(kw)
+    ).slice(0, 25)
   }
 
   const selectHangHoa = (idx, hh) => {
@@ -520,6 +521,7 @@ export default function PhieuXuat() {
                                       <button key={j} type="button"
                                         onMouseDown={() => selectHangHoa(i, hh)}
                                         className="w-full text-left px-3 py-2 hover:bg-orange-50 text-xs flex items-center gap-2 border-b border-gray-50 last:border-0">
+                                        <span className="font-mono text-gray-400 flex-shrink-0 w-20 truncate">{hh.ma_hang}</span>
                                         <span className="text-gray-800 flex-1 truncate">{hh.ten_hang}</span>
                                         <span className="text-orange-400 font-mono flex-shrink-0">{hh.dvt}</span>
                                       </button>
