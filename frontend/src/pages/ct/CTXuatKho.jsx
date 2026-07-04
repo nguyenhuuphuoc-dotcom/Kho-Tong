@@ -34,6 +34,7 @@ export default function CTXuatKho() {
   const [items, setItems] = useState([emptyItem()])
   const [hangHoaList, setHangHoaList] = useState([])
   const [saveMsg, setSaveMsg] = useState(null)
+  const [openSuggest, setOpenSuggest] = useState(null)
 
   const loadData = () => {
     setLoading(true)
@@ -302,11 +303,11 @@ export default function CTXuatKho() {
                   <thead className="bg-gray-50">
                     <tr>
                       <th className="text-left px-3 py-2 text-gray-500 font-medium w-8">#</th>
-                      <th className="text-left px-3 py-2 text-gray-500 font-medium">Ten hang hoa</th>
-                      <th className="text-left px-3 py-2 text-gray-500 font-medium w-20">DVT</th>
-                      <th className="text-right px-3 py-2 text-gray-500 font-medium w-24">So luong</th>
-                      <th className="text-right px-3 py-2 text-gray-500 font-medium w-28">Don gia</th>
-                      <th className="text-right px-3 py-2 text-gray-500 font-medium w-28">Thanh tien</th>
+                      <th className="text-left px-3 py-2 text-gray-500 font-medium">Tên hàng hóa</th>
+                      <th className="text-left px-3 py-2 text-gray-500 font-medium w-20">ĐVT</th>
+                      <th className="text-right px-3 py-2 text-gray-500 font-medium w-24">Số lượng</th>
+                      <th className="text-right px-3 py-2 text-gray-500 font-medium w-28">Đơn giá</th>
+                      <th className="text-right px-3 py-2 text-gray-500 font-medium w-28">Thành tiền</th>
                       <th className="w-8"></th>
                     </tr>
                   </thead>
@@ -314,17 +315,40 @@ export default function CTXuatKho() {
                     {items.map((it, i) => (
                       <tr key={i} className="border-t border-gray-100">
                         <td className="px-3 py-1.5 text-gray-400 text-xs">{i+1}</td>
-                        <td className="px-3 py-1.5">
+                        <td className="px-3 py-1.5 relative">
                           <input
-                            list={`hang-list-xk-${i}`}
                             value={it.ten_hang}
-                            onChange={e => { updateItem(i, 'ten_hang', e.target.value); handleSelectHang(i, e.target.value) }}
-                            placeholder="Ten hang..."
+                            onChange={e => { updateItem(i, 'ten_hang', e.target.value); setOpenSuggest(i) }}
+                            onFocus={() => setOpenSuggest(i)}
+                            onBlur={() => setTimeout(() => setOpenSuggest(null), 200)}
+                            placeholder="Tên hàng..."
+                            autoComplete="off"
                             className="w-full border border-gray-200 rounded px-2 py-1 text-xs focus:outline-none focus:border-orange-300"
                           />
-                          <datalist id={`hang-list-xk-${i}`}>
-                            {hangHoaList.map(h => <option key={h.ma_hang} value={h.ten_hang} />)}
-                          </datalist>
+                          {openSuggest === i && (() => {
+                            const q = (it.ten_hang || '').toLowerCase()
+                            const matches = hangHoaList.filter(h =>
+                              !q || (h.ten_hang||'').toLowerCase().includes(q) || (h.ma_hang||'').toLowerCase().includes(q)
+                            ).slice(0, 25)
+                            if (!matches.length) return null
+                            return (
+                              <div className="absolute z-20 left-0 right-0 top-full mt-0.5 bg-white border border-gray-200 rounded-lg shadow-lg max-h-44 overflow-y-auto">
+                                {matches.map(h => (
+                                  <div key={h.ma_hang}
+                                    onMouseDown={() => {
+                                      const next = [...items]
+                                      next[i] = { ...next[i], ten_hang: h.ten_hang, dvt: h.dvt || 'cái' }
+                                      setItems(next)
+                                      setOpenSuggest(null)
+                                    }}
+                                    className="px-3 py-1.5 hover:bg-orange-50 cursor-pointer text-xs flex items-center gap-2">
+                                    <span className="font-mono text-gray-400 shrink-0">{h.ma_hang}</span>
+                                    <span className="text-gray-800">{h.ten_hang}</span>
+                                  </div>
+                                ))}
+                              </div>
+                            )
+                          })()}
                         </td>
                         <td className="px-3 py-1.5">
                           <input value={it.dvt} onChange={e => updateItem(i, 'dvt', e.target.value)}
@@ -355,9 +379,9 @@ export default function CTXuatKho() {
                 </table>
                 <div className="px-3 py-2 border-t border-gray-100 flex justify-between items-center bg-gray-50">
                   <button onClick={() => setItems([...items, emptyItem()])} className="text-xs text-teal-600 hover:underline flex items-center gap-1">
-                    <Plus className="w-3 h-3" /> Them dong
+                    <Plus className="w-3 h-3" /> Thêm dòng
                   </button>
-                  <span className="text-sm font-bold text-gray-700">Tong: {formatVND(tongTien)}</span>
+                  <span className="text-sm font-bold text-gray-700">Tổng: {formatVND(tongTien)}</span>
                 </div>
               </div>
 
@@ -370,11 +394,11 @@ export default function CTXuatKho() {
               <div className="flex justify-end gap-3 pt-2">
                 <button onClick={() => setShowForm(false)}
                   className="px-5 py-2 border border-gray-200 rounded-lg text-sm text-gray-600 hover:bg-gray-50">
-                  Huy
+                  Hủy
                 </button>
                 <button onClick={handleSave} disabled={saving}
                   className="px-6 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-lg text-sm font-medium disabled:opacity-50 flex items-center gap-2">
-                  {saving ? <><RefreshCw className="w-4 h-4 animate-spin" /> Dang luu...</> : 'Luu Phieu XK'}
+                  {saving ? <><RefreshCw className="w-4 h-4 animate-spin" /> Đang lưu...</> : 'Lưu Phiếu XK'}
                 </button>
               </div>
             </div>
