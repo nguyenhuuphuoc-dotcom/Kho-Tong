@@ -32,6 +32,9 @@ export const deleteHangHoa = (ma) => api.delete(`/hang-hoa/${ma}`)
 
 // Ton kho
 export const getTonKho = (params) => api.get('/ton-kho/', { params })
+export const themHangTonKho = (data) => api.post('/ton-kho/them-hang', data)
+export const dieuChinhTonKho = (data) => api.post('/ton-kho/dieu-chinh', data)
+export const xoaHangTonKho = (params) => api.delete('/ton-kho/xoa-hang', { params })
 
 // Bao cao
 export const getBaoCaoTongHop = (params) => api.get('/bao-cao/tong-hop', { params })

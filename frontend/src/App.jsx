@@ -40,7 +40,7 @@ function PrivateRoute({ children }) {
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="text-center">
           <div className="w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-2" />
-          <p className="text-sm text-gray-400">Dang tai...</p>
+          <p className="text-sm text-gray-400">Đang tải...</p>
         </div>
       </div>
     )

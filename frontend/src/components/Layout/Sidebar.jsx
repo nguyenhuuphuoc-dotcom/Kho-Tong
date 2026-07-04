@@ -13,32 +13,32 @@ import { useAuth } from '../../context/AuthContext'
 
 // ── Menu tĩnh ─────────────────────────────────────────────────
 const groupTongQuan = {
-  label: 'TONG QUAN',
+  label: 'TỔNG QUAN',
   keep: true,
   items: [
-    { icon: BarChart2, label: 'Bao cao tong hop', path: '/' },
-    { icon: Bell,      label: 'Canh bao',         path: '/canh-bao', badge: true },
+    { icon: BarChart2, label: 'Báo cáo tổng hợp', path: '/' },
+    { icon: Bell,      label: 'Cảnh báo',         path: '/canh-bao', badge: true },
   ]
 }
 
 const groupQuanLy = {
-  label: 'QUAN LY DU LIEU',
+  label: 'QUẢN LÝ DỮ LIỆU',
   items: [
-    { icon: Upload,    label: 'Xuat kho',         path: '/phieu-xuat' },
-    { icon: Download,  label: 'Nhap kho',          path: '/phieu-nhap' },
-    { icon: Package,   label: 'Ton kho',           path: '/ton-kho' },
-    { icon: Box,       label: 'Danh muc hang hoa', path: '/danh-muc' },
-    { icon: BarChart2,     label: 'Bao cao',        path: '/bao-cao' },
-    { icon: ClipboardList, label: 'Nhat ky HD',   path: '/nhat-ky', adminOnly: true },
+    { icon: Upload,    label: 'Xuất kho',         path: '/phieu-xuat' },
+    { icon: Download,  label: 'Nhập kho',          path: '/phieu-nhap' },
+    { icon: Package,   label: 'Tồn kho',           path: '/ton-kho' },
+    { icon: Box,       label: 'Danh mục hàng hóa', path: '/danh-muc' },
+    { icon: BarChart2,     label: 'Báo cáo',        path: '/bao-cao' },
+    { icon: ClipboardList, label: 'Nhật ký HĐ',   path: '/nhat-ky', adminOnly: true },
   ]
 }
 
 const groupHeThong = {
-  label: 'HE THONG',
+  label: 'HỆ THỐNG',
   items: [
-    { icon: Building2, label: 'Cong trinh', path: '/cong-trinh' },
-    { icon: Shield,    label: 'Phan quyen', path: '/phan-quyen' },
-    { icon: Users,     label: 'Nguoi dung', path: '/nguoi-dung' },
+    { icon: Building2, label: 'Công trình', path: '/cong-trinh' },
+    { icon: Shield,    label: 'Phân quyền', path: '/phan-quyen' },
+    { icon: Users,     label: 'Người dùng', path: '/nguoi-dung' },
   ]
 }
 
@@ -109,7 +109,7 @@ export default function Sidebar({ collapsed, onToggle }) {
             <img src="/logo-hpcons.png" alt="HP Cons" className="h-9 w-auto object-contain flex-shrink-0" />
             <div>
               <div className="font-bold text-gray-800 text-sm leading-tight">HPCons AppTong</div>
-              <div className="text-xs text-gray-400 leading-tight">Quan ly kho v2.0</div>
+              <div className="text-xs text-gray-400 leading-tight">Quản lý kho v2.0</div>
             </div>
           </div>
         )}
@@ -143,7 +143,7 @@ export default function Sidebar({ collapsed, onToggle }) {
                 onClick={() => setCtCollapsed(!ctCollapsed)}
                 className="w-full flex items-center justify-between px-4 pt-3 pb-1 group"
               >
-                <span className="text-[10px] font-bold text-gray-400 tracking-widest uppercase">Danh sach cong trinh</span>
+                <span className="text-[10px] font-bold text-gray-400 tracking-widest uppercase">Danh sách công trình</span>
                 {ctCollapsed
                   ? <ChevronDown className="w-3 h-3 text-gray-400" />
                   : <ChevronUp className="w-3 h-3 text-gray-400" />
@@ -155,7 +155,7 @@ export default function Sidebar({ collapsed, onToggle }) {
             {!ctCollapsed && (
               <button
                 onClick={() => setSelectedCT(null)}
-                title={collapsed ? 'Tat ca cong trinh' : undefined}
+                title={collapsed ? 'Tất cả công trình' : undefined}
                 className={`w-full flex items-center gap-3 mx-2 px-3 py-2 rounded-lg text-sm transition-all duration-150 relative group
                   ${selectedCT === null
                     ? 'bg-blue-50 text-blue-700 font-semibold border-l-[3px] border-blue-500'
@@ -166,10 +166,10 @@ export default function Sidebar({ collapsed, onToggle }) {
                 <div className="w-5 h-5 bg-gray-400 rounded flex items-center justify-center flex-shrink-0">
                   <Layers className="w-3 h-3 text-white" />
                 </div>
-                {!collapsed && <span className="flex-1 truncate text-left font-medium">Tat ca cong trinh</span>}
+                {!collapsed && <span className="flex-1 truncate text-left font-medium">Tất cả công trình</span>}
                 {collapsed && (
                   <div className="absolute left-full ml-2 px-2 py-1 bg-gray-800 text-white text-xs rounded whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none z-50">
-                    Tat ca cong trinh
+                    Tất cả công trình
                   </div>
                 )}
               </button>
@@ -204,7 +204,7 @@ export default function Sidebar({ collapsed, onToggle }) {
             })}
 
             {!ctCollapsed && congTrinhs.length === 0 && !collapsed && (
-              <div className="mx-2 px-3 py-2 text-xs text-gray-400 italic">Chua co cong trinh</div>
+              <div className="mx-2 px-3 py-2 text-xs text-gray-400 italic">Chưa có công trình</div>
             )}
           </div>
         )}
@@ -220,12 +220,12 @@ export default function Sidebar({ collapsed, onToggle }) {
       {/* Connection Status */}
       {!collapsed && (
         <div className="mx-3 mb-3 p-3 bg-gray-50 rounded-xl border border-gray-100">
-          <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">Ket noi he thong</div>
+          <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">Kết nối hệ thống</div>
           <div className="space-y-1.5">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-1.5">
                 <Database className="w-3 h-3 text-gray-400" />
-                <span className="text-xs text-gray-600">Database tong</span>
+                <span className="text-xs text-gray-600">Database tổng</span>
               </div>
               <div className="flex items-center gap-1">
                 <span className="w-1.5 h-1.5 rounded-full bg-green-500 inline-block" />
@@ -238,22 +238,22 @@ export default function Sidebar({ collapsed, onToggle }) {
                   <Building2 className="w-3 h-3 text-gray-400" />
                   <span className="text-xs text-gray-600">App con</span>
                 </div>
-                <span className="text-xs text-teal-600 font-medium">{congTrinhs.length} cong trinh</span>
+                <span className="text-xs text-teal-600 font-medium">{congTrinhs.length} công trình</span>
               </div>
             ) : selectedCT ? (
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-1.5">
                   <Building2 className="w-3 h-3 text-gray-400" />
-                  <span className="text-xs text-gray-600">Cong trinh</span>
+                  <span className="text-xs text-gray-600">Công trình</span>
                 </div>
                 <span className="text-xs text-teal-600 font-medium truncate max-w-[110px]">{selectedCT.ten_ct}</span>
               </div>
             ) : null}
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-1.5">
-                <CheckCircle className="w-3 h-3 text-gray-400" />                <span className="text-xs text-gray-600">Dong bo</span>
+                <CheckCircle className="w-3 h-3 text-gray-400" />                <span className="text-xs text-gray-600">Đồng bộ</span>
               </div>
-              <span className="text-xs text-green-600 font-medium">Thanh cong</span>
+              <span className="text-xs text-green-600 font-medium">Thành công</span>
             </div>
           </div>
         </div>
@@ -263,7 +263,7 @@ export default function Sidebar({ collapsed, onToggle }) {
       {!collapsed && (
         <div className="px-4 py-3 border-t border-gray-100">
           <p className="text-xs text-gray-400 text-center">© 2026 HPCons AppTong</p>
-          <p className="text-xs text-gray-400 text-center">Phien ban 2.0.0</p>
+          <p className="text-xs text-gray-400 text-center">Phiên bản 2.0.0</p>
         </div>
       )}
     </aside>

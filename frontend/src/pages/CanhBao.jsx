@@ -4,9 +4,9 @@ import { getTonKho } from '../api'
 import { useCongTrinh } from '../context/CongTrinhContext'
 
 const MUC_DO = [
-  { label: 'Het hang',   color: 'bg-red-100 text-red-700',    check: (t) => t <= 0 },
-  { label: 'Rat thap',   color: 'bg-orange-100 text-orange-700', check: (t) => t > 0 && t <= 5 },
-  { label: 'Thap',       color: 'bg-amber-100 text-amber-700',   check: (t) => t > 5 && t <= 20 },
+  { label: 'Hết hàng',   color: 'bg-red-100 text-red-700',    check: (t) => t <= 0 },
+  { label: 'Rất thấp',   color: 'bg-orange-100 text-orange-700', check: (t) => t > 0 && t <= 5 },
+  { label: 'Thấp',       color: 'bg-amber-100 text-amber-700',   check: (t) => t > 5 && t <= 20 },
 ]
 
 function getMucDo(ton) {
@@ -55,8 +55,8 @@ export default function CanhBao() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-800">CANH BAO TON KHO</h1>
-          <p className="text-gray-500 mt-1 text-sm">Danh sach vat tu can bo sung theo cong trinh</p>
+          <h1 className="text-2xl font-bold text-gray-800">CẢNH BÁO TỒN KHO</h1>
+          <p className="text-gray-500 mt-1 text-sm">Danh sách vật tư cần bổ sung theo công trình</p>
         </div>
         <button onClick={loadData} disabled={loading}
           className="p-2 border border-gray-200 rounded-lg hover:bg-gray-50 text-gray-600">
@@ -67,10 +67,10 @@ export default function CanhBao() {
       {/* Stats */}
       <div className="grid grid-cols-4 gap-4">
         {[
-          { label: 'Tong canh bao', value: data.length,  color: 'text-gray-800', bg: 'bg-white', active: filter === 'all',      key: 'all' },
-          { label: 'Het hang',      value: hetHang,       color: 'text-red-600',  bg: 'bg-white', active: filter === 'het',       key: 'het' },
-          { label: 'Rat thap',      value: ratThap,       color: 'text-orange-600',bg:'bg-white', active: filter === 'rat_thap',  key: 'rat_thap' },
-          { label: 'Thap',          value: thap,          color: 'text-amber-600', bg: 'bg-white', active: filter === 'thap',     key: 'thap' },
+          { label: 'Tổng cảnh báo', value: data.length,  color: 'text-gray-800', bg: 'bg-white', active: filter === 'all',      key: 'all' },
+          { label: 'Hết hàng',      value: hetHang,       color: 'text-red-600',  bg: 'bg-white', active: filter === 'het',       key: 'het' },
+          { label: 'Rất thấp',      value: ratThap,       color: 'text-orange-600',bg:'bg-white', active: filter === 'rat_thap',  key: 'rat_thap' },
+          { label: 'Thấp',          value: thap,          color: 'text-amber-600', bg: 'bg-white', active: filter === 'thap',     key: 'thap' },
         ].map(s => (
           <button key={s.key} onClick={() => setFilter(s.key)}
             className={`${s.bg} rounded-xl border p-4 text-left transition-all ${
@@ -86,33 +86,33 @@ export default function CanhBao() {
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
         <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
           <h3 className="font-semibold text-gray-800">
-            Danh sach canh bao ({filtered.length})
+            Danh sách cảnh báo ({filtered.length})
           </h3>
           {filtered.length > 0 && (
             <span className="bg-red-100 text-red-600 text-xs font-semibold px-2 py-0.5 rounded-full">
-              {filtered.length} muc can xu ly
+              {filtered.length} mục cần xử lý
             </span>
           )}
         </div>
 
         {loading ? (
-          <div className="py-16 text-center text-gray-400">Dang tai...</div>
+          <div className="py-16 text-center text-gray-400">Đang tải...</div>
         ) : filtered.length === 0 ? (
           <div className="py-16 text-center">
             <Package className="w-12 h-12 text-gray-200 mx-auto mb-3" />
-            <div className="text-gray-400 font-medium">Khong co canh bao nao</div>
-            <div className="text-gray-300 text-sm mt-1">Tat ca vat tu deu co ton kho on dinh</div>
+            <div className="text-gray-400 font-medium">Không có cảnh báo nào</div>
+            <div className="text-gray-300 text-sm mt-1">Tất cả vật tư đều có tồn kho ổn định</div>
           </div>
         ) : (
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-gray-100 text-gray-500 text-xs bg-gray-50">
                 <th className="text-left px-4 py-3 font-medium">#</th>
-                <th className="text-left px-4 py-3 font-medium">Ten vat tu</th>
-                <th className="text-left px-4 py-3 font-medium">Nhom</th>
-                <th className="text-left px-4 py-3 font-medium">Cong trinh</th>
-                <th className="text-right px-4 py-3 font-medium">Ton kho</th>
-                <th className="text-center px-4 py-3 font-medium">Muc do</th>
+                <th className="text-left px-4 py-3 font-medium">Tên vật tư</th>
+                <th className="text-left px-4 py-3 font-medium">Nhóm</th>
+                <th className="text-left px-4 py-3 font-medium">Công trình</th>
+                <th className="text-right px-4 py-3 font-medium">Tồn kho</th>
+                <th className="text-center px-4 py-3 font-medium">Mức độ</th>
               </tr>
             </thead>
             <tbody>

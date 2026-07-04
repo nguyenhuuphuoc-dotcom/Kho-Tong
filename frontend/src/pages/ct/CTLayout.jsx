@@ -7,13 +7,13 @@ import {
 import { getCongTrinh } from '../../api'
 
 const menuItems = [
-  { icon: LayoutDashboard, label: 'Tong quan',      path: '' },
-  { icon: Download,        label: 'Nhap kho',        path: 'nhap-kho' },
-  { icon: Upload,          label: 'Xuat kho',        path: 'xuat-kho' },
-  { icon: Package,         label: 'Ton kho',         path: 'ton-kho' },
-  { icon: BookOpen,        label: 'Danh muc hang',   path: 'danh-muc' },
-  { icon: Cpu,             label: 'AI Doc PDF',      path: 'ai-reader' },
-  { icon: FileUp,          label: 'Import du lieu',  path: 'import-data' },
+  { icon: LayoutDashboard, label: 'Tổng quan',       path: '' },
+  { icon: Download,        label: 'Nhập kho',        path: 'nhap-kho' },
+  { icon: Upload,          label: 'Xuất kho',        path: 'xuat-kho' },
+  { icon: Package,         label: 'Tồn kho',         path: 'ton-kho' },
+  { icon: BookOpen,        label: 'Danh mục hàng',   path: 'danh-muc' },
+  { icon: Cpu,             label: 'AI đọc PDF',      path: 'ai-reader' },
+  { icon: FileUp,          label: 'Import dữ liệu',  path: 'import-data' },
 ]
 
 export default function CTLayout() {
@@ -48,7 +48,7 @@ export default function CTLayout() {
               </div>
               <div className="min-w-0">
                 <div className="text-xs font-bold text-teal-700 leading-tight truncate">
-                  {congTrinh?.ten_ct || 'Cong trinh'}
+                  {congTrinh?.ten_ct || 'Công trình'}
                 </div>
                 <div className="text-xs text-gray-400 leading-tight font-mono">{congTrinh?.ma_ct || ''}</div>
               </div>
@@ -102,11 +102,11 @@ export default function CTLayout() {
         <div className="p-3 border-t border-gray-100">
           <button
             onClick={() => navigate('/')}
-            title={collapsed ? 'Ve Web Tong' : undefined}
+            title={collapsed ? 'Về Web Tổng' : undefined}
             className="flex items-center gap-2 w-full px-3 py-2 rounded-lg text-sm text-gray-500 hover:bg-gray-50 hover:text-gray-700 transition-colors"
           >
             <ArrowLeft className="w-4 h-4 flex-shrink-0" />
-            {!collapsed && <span>Ve Web Tong</span>}
+            {!collapsed && <span>Về Web Tổng</span>}
           </button>
         </div>
       </aside>
@@ -117,7 +117,7 @@ export default function CTLayout() {
         <div className="bg-white border-b border-gray-200 px-6 py-3 flex items-center gap-3 flex-shrink-0">
           <div className="w-2 h-2 rounded-full bg-teal-500" />
           <span className="text-sm font-semibold text-gray-700">
-            {congTrinh?.ten_ct || 'Dang tai...'}
+            {congTrinh?.ten_ct || 'Đang tải...'}
           </span>
           {congTrinh?.dia_chi && (
             <span className="text-xs text-gray-400">&nbsp;·&nbsp; {congTrinh.dia_chi}</span>

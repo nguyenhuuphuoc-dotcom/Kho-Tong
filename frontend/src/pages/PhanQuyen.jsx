@@ -62,9 +62,9 @@ export default function PhanQuyen() {
         ctSet.forEach(ctId => permList.push({ user_id: parseInt(userId), cong_trinh_id: ctId }))
       })
       await api.post('/auth/permissions', { permissions: permList })
-      setMsg({ type: 'ok', text: 'Luu phan quyen thanh cong!' })
+      setMsg({ type: 'ok', text: 'Lưu phân quyền thành công!' })
     } catch (err) {
-      setMsg({ type: 'err', text: err.response?.data?.detail || 'Loi luu phan quyen' })
+      setMsg({ type: 'err', text: err.response?.data?.detail || 'Lỗi lưu phân quyền' })
     } finally {
       setSaving(false)
     }
@@ -74,12 +74,12 @@ export default function PhanQuyen() {
     return (
       <div className="space-y-6">
         <div>
-          <h1 className="text-2xl font-bold text-gray-800">PHAN QUYEN</h1>
-          <p className="text-gray-500 mt-1 text-sm">Quan ly quyen truy cap cua tung tai khoan</p>
+          <h1 className="text-2xl font-bold text-gray-800">PHÂN QUYỀN</h1>
+          <p className="text-gray-500 mt-1 text-sm">Quản lý quyền truy cập của từng tài khoản</p>
         </div>
         <div className="bg-white rounded-xl border border-gray-100 p-16 text-center">
           <Shield className="w-16 h-16 text-gray-200 mx-auto mb-4" />
-          <div className="text-gray-500 font-medium">Chi admin moi truy cap duoc trang nay</div>
+          <div className="text-gray-500 font-medium">Chỉ admin mới truy cập được trang này</div>
         </div>
       </div>
     )
@@ -89,8 +89,8 @@ export default function PhanQuyen() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-800">PHAN QUYEN CONG TRINH</h1>
-          <p className="text-gray-500 mt-1 text-sm">Chon cong trinh ma tung nguoi dung duoc truy cap</p>
+          <h1 className="text-2xl font-bold text-gray-800">PHÂN QUYỀN CÔNG TRÌNH</h1>
+          <p className="text-gray-500 mt-1 text-sm">Chọn công trình mà từng người dùng được truy cập</p>
         </div>
         <div className="flex gap-2">
           <button onClick={loadData} disabled={loading}
@@ -100,7 +100,7 @@ export default function PhanQuyen() {
           <button onClick={handleSave} disabled={saving || loading}
             className="flex items-center gap-2 px-4 py-2 bg-green-500 text-white rounded-lg text-sm font-medium hover:bg-green-600 disabled:opacity-50 transition-colors">
             <Save className="w-4 h-4" />
-            {saving ? 'Dang luu...' : 'Luu phan quyen'}
+            {saving ? 'Đang lưu...' : 'Lưu phân quyền'}
           </button>
         </div>
       </div>
@@ -115,24 +115,24 @@ export default function PhanQuyen() {
         </div>
       )}
 
-      {/* Huong dan */}
+      {/* Hướng dẫn */}
       <div className="bg-blue-50 rounded-xl p-4 border border-blue-100 text-sm text-blue-700">
-        <strong>Cach dung:</strong> Tick o tich tuong ung giua Nguoi dung va Cong trinh de cap quyen xem.
-        Admin luon co quyen xem tat ca. Nhan "Luu phan quyen" de luu thay doi.
+        <strong>Cách dùng:</strong> Tick ô tích tương ứng giữa Người dùng và Công trình để cấp quyền xem.
+        Admin luôn có quyền xem tất cả. Nhấn "Lưu phân quyền" để lưu thay đổi.
       </div>
 
       {loading ? (
-        <div className="bg-white rounded-xl border border-gray-100 p-16 text-center text-gray-400">Dang tai...</div>
+        <div className="bg-white rounded-xl border border-gray-100 p-16 text-center text-gray-400">Đang tải...</div>
       ) : users.length === 0 ? (
         <div className="bg-white rounded-xl border border-gray-100 p-16 text-center text-gray-400">
-          Chua co tai khoan nao. Tao tai khoan truoc trong trang Nguoi dung.
+          Chưa có tài khoản nào. Tạo tài khoản trước trong trang Người dùng.
         </div>
       ) : (
         <div className="bg-white rounded-xl border border-gray-100 overflow-x-auto">
           <table className="w-full text-sm">
             <thead className="bg-gray-50 border-b border-gray-100">
               <tr>
-                <th className="text-left px-4 py-3 text-gray-500 font-medium w-48">Nguoi dung</th>
+                <th className="text-left px-4 py-3 text-gray-500 font-medium w-48">Người dùng</th>
                 {congTrinhs.map(ct => (
                   <th key={ct.id} className="text-center px-3 py-3 text-gray-500 font-medium text-xs max-w-[120px]">
                     <div className="truncate" title={ct.ten_ct}>{ct.ten_ct}</div>

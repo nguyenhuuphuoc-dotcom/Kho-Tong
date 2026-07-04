@@ -26,31 +26,31 @@ export default function NguoiDung() {
   const handleCreate = async (e) => {
     e.preventDefault()
     if (!form.email || !form.ten || !form.password) {
-      setMsg({ type: 'err', text: 'Vui long nhap day du thong tin' }); return
+      setMsg({ type: 'err', text: 'Vui lòng nhập đầy đủ thông tin' }); return
     }
     setSaving(true)
     setMsg(null)
     try {
       await api.post('/auth/create-user', form)
-      setMsg({ type: 'ok', text: `Tao tai khoan ${form.email} thanh cong!` })
+      setMsg({ type: 'ok', text: `Tạo tài khoản ${form.email} thành công!` })
       setForm({ email: '', ten: '', password: '', role: 'user' })
       setShowForm(false)
       loadUsers()
     } catch (err) {
-      setMsg({ type: 'err', text: err.response?.data?.detail || 'Loi tao tai khoan' })
+      setMsg({ type: 'err', text: err.response?.data?.detail || 'Lỗi tạo tài khoản' })
     } finally {
       setSaving(false)
     }
   }
 
   const handleDelete = async (id, email) => {
-    if (!window.confirm(`Xoa tai khoan ${email}?`)) return
+    if (!window.confirm(`Xóa tài khoản ${email}?`)) return
     try {
       await api.delete(`/auth/users/${id}`)
-      setMsg({ type: 'ok', text: `Da xoa tai khoan ${email}` })
+      setMsg({ type: 'ok', text: `Đã xóa tài khoản ${email}` })
       loadUsers()
     } catch (err) {
-      setMsg({ type: 'err', text: err.response?.data?.detail || 'Loi xoa tai khoan' })
+      setMsg({ type: 'err', text: err.response?.data?.detail || 'Lỗi xóa tài khoản' })
     }
   }
 
@@ -60,8 +60,8 @@ export default function NguoiDung() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-800">QUAN LY NGUOI DUNG</h1>
-          <p className="text-gray-500 mt-1 text-sm">Tao va quan ly tai khoan dang nhap vao he thong</p>
+          <h1 className="text-2xl font-bold text-gray-800">QUẢN LÝ NGƯỜI DÙNG</h1>
+          <p className="text-gray-500 mt-1 text-sm">Tạo và quản lý tài khoản đăng nhập vào hệ thống</p>
         </div>
         <div className="flex gap-2">
           <button onClick={loadUsers} disabled={loading}
@@ -72,7 +72,7 @@ export default function NguoiDung() {
             <button onClick={() => setShowForm(true)}
               className="flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-lg text-sm font-medium hover:bg-blue-600 transition-colors">
               <Plus className="w-4 h-4" />
-              Tao tai khoan
+              Tạo tài khoản
             </button>
           )}
         </div>
@@ -94,11 +94,11 @@ export default function NguoiDung() {
       {/* Stats */}
       <div className="grid grid-cols-3 gap-4">
         <div className="bg-white rounded-xl border border-gray-100 p-4">
-          <div className="text-xs text-gray-400 mb-1">Tong tai khoan</div>
+          <div className="text-xs text-gray-400 mb-1">Tổng tài khoản</div>
           <div className="text-2xl font-bold text-gray-800">{users.length}</div>
         </div>
         <div className="bg-white rounded-xl border border-gray-100 p-4">
-          <div className="text-xs text-gray-400 mb-1">Dang hoat dong</div>
+          <div className="text-xs text-gray-400 mb-1">Đang hoạt động</div>
           <div className="text-2xl font-bold text-green-600">{users.filter(u => u.active).length}</div>
         </div>
         <div className="bg-white rounded-xl border border-gray-100 p-4">
@@ -113,19 +113,19 @@ export default function NguoiDung() {
           <thead className="bg-gray-50 border-b border-gray-100">
             <tr>
               <th className="text-left px-4 py-3 text-gray-500 font-medium">#</th>
-              <th className="text-left px-4 py-3 text-gray-500 font-medium">Ten</th>
+              <th className="text-left px-4 py-3 text-gray-500 font-medium">Tên</th>
               <th className="text-left px-4 py-3 text-gray-500 font-medium">Email</th>
-              <th className="text-left px-4 py-3 text-gray-500 font-medium">Quyen</th>
-              <th className="text-left px-4 py-3 text-gray-500 font-medium">Trang thai</th>
-              <th className="text-left px-4 py-3 text-gray-500 font-medium">Ngay tao</th>
-              {isAdmin && <th className="text-center px-4 py-3 text-gray-500 font-medium">Xoa</th>}
+              <th className="text-left px-4 py-3 text-gray-500 font-medium">Quyền</th>
+              <th className="text-left px-4 py-3 text-gray-500 font-medium">Trạng thái</th>
+              <th className="text-left px-4 py-3 text-gray-500 font-medium">Ngày tạo</th>
+              {isAdmin && <th className="text-center px-4 py-3 text-gray-500 font-medium">Xóa</th>}
             </tr>
           </thead>
           <tbody>
             {loading
-              ? <tr><td colSpan={7} className="py-10 text-center text-gray-400">Dang tai...</td></tr>
+              ? <tr><td colSpan={7} className="py-10 text-center text-gray-400">Đang tải...</td></tr>
               : users.length === 0
-                ? <tr><td colSpan={7} className="py-10 text-center text-gray-400">Chua co tai khoan nao</td></tr>
+                ? <tr><td colSpan={7} className="py-10 text-center text-gray-400">Chưa có tài khoản nào</td></tr>
                 : users.map((u, i) => (
                     <tr key={u.id} className="border-b border-gray-50 hover:bg-gray-50">
                       <td className="px-4 py-3 text-gray-400 text-xs">{i + 1}</td>
@@ -139,7 +139,7 @@ export default function NguoiDung() {
                       <td className="px-4 py-3">
                         <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${
                           u.active ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-600'
-                        }`}>{u.active ? 'Hoat dong' : 'Khoa'}</span>
+                        }`}>{u.active ? 'Hoạt động' : 'Khóa'}</span>
                       </td>
                       <td className="px-4 py-3 text-gray-400 text-xs">
                         {u.created_at ? new Date(u.created_at).toLocaleDateString('vi-VN') : '—'}
@@ -167,16 +167,16 @@ export default function NguoiDung() {
           onClick={e => { if (e.target === e.currentTarget) setShowForm(false) }}>
           <div className="bg-white rounded-xl shadow-xl w-full max-w-md p-6">
             <div className="flex items-center justify-between mb-5">
-              <h3 className="font-bold text-gray-800 text-lg">Tao tai khoan moi</h3>
+              <h3 className="font-bold text-gray-800 text-lg">Tạo tài khoản mới</h3>
               <button onClick={() => setShowForm(false)} className="p-1 hover:bg-gray-100 rounded-lg text-gray-400">
                 <X className="w-5 h-5" />
               </button>
             </div>
             <form onSubmit={handleCreate} className="space-y-4">
               <div>
-                <label className="text-xs font-medium text-gray-500 mb-1.5 block">Ho ten *</label>
+                <label className="text-xs font-medium text-gray-500 mb-1.5 block">Họ tên *</label>
                 <input value={form.ten} onChange={e => setForm({...form, ten: e.target.value})}
-                  placeholder="Nguyen Van A"
+                  placeholder="Nguyễn Văn A"
                   className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-blue-400" />
               </div>
               <div>
@@ -186,11 +186,11 @@ export default function NguoiDung() {
                   className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-blue-400" />
               </div>
               <div>
-                <label className="text-xs font-medium text-gray-500 mb-1.5 block">Mat khau *</label>
+                <label className="text-xs font-medium text-gray-500 mb-1.5 block">Mật khẩu *</label>
                 <div className="relative">
                   <input type={showPw ? 'text' : 'password'} value={form.password}
                     onChange={e => setForm({...form, password: e.target.value})}
-                    placeholder="Mat khau..."
+                    placeholder="Mật khẩu..."
                     className="w-full border border-gray-200 rounded-xl px-3 py-2.5 pr-10 text-sm focus:outline-none focus:border-blue-400" />
                   <button type="button" onClick={() => setShowPw(!showPw)}
                     className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400">
@@ -199,21 +199,21 @@ export default function NguoiDung() {
                 </div>
               </div>
               <div>
-                <label className="text-xs font-medium text-gray-500 mb-1.5 block">Quyen</label>
+                <label className="text-xs font-medium text-gray-500 mb-1.5 block">Quyền</label>
                 <select value={form.role} onChange={e => setForm({...form, role: e.target.value})}
                   className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-blue-400">
-                  <option value="user">User — Xem du lieu</option>
-                  <option value="admin">Admin — Quan tri he thong</option>
+                  <option value="user">User — Xem dữ liệu</option>
+                  <option value="admin">Admin — Quản trị hệ thống</option>
                 </select>
               </div>
               <div className="flex gap-3 pt-2">
                 <button type="button" onClick={() => setShowForm(false)}
                   className="flex-1 py-2.5 border border-gray-200 text-gray-600 rounded-xl text-sm hover:bg-gray-50">
-                  Huy
+                  Hủy
                 </button>
                 <button type="submit" disabled={saving}
                   className="flex-1 py-2.5 bg-blue-500 text-white rounded-xl text-sm font-medium hover:bg-blue-600 disabled:opacity-50">
-                  {saving ? 'Dang tao...' : 'Tao tai khoan'}
+                  {saving ? 'Đang tạo...' : 'Tạo tài khoản'}
                 </button>
               </div>
             </form>

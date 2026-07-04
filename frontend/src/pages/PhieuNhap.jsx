@@ -8,7 +8,7 @@ import { exportPhieuList } from '../utils/exportExcel'
 const fmt = (n) => (n ?? 0).toLocaleString('vi-VN')
 function formatVND(n) {
   const num = n ?? 0
-  if (num >= 1_000_000_000) return (num / 1_000_000_000).toFixed(1) + ' ty'
+  if (num >= 1_000_000_000) return (num / 1_000_000_000).toFixed(1) + ' tỷ'
   if (num >= 1_000_000) return (num / 1_000_000).toFixed(0) + ' tr'
   return num.toLocaleString('vi-VN')
 }
@@ -19,7 +19,7 @@ const genSoPhieu = () => {
   const ymd = `${d.getFullYear()}${String(d.getMonth()+1).padStart(2,'0')}${String(d.getDate()).padStart(2,'0')}`
   return `NK-${ymd}-${String(Math.floor(Math.random()*900)+100)}`
 }
-const emptyItem = () => ({ ten_hang: '', dvt: 'cai', so_luong: 1, don_gia: 0, thanh_tien: 0 })
+const emptyItem = () => ({ ten_hang: '', dvt: 'cái', so_luong: 1, don_gia: 0, thanh_tien: 0 })
 
 export default function PhieuNhap() {
   const { selectedCT, ctLoading, congTrinhs, isAdmin, dateFrom, dateTo } = useCongTrinh()
@@ -136,10 +136,10 @@ export default function PhieuNhap() {
   const tongItems = items.reduce((s, it) => s + (it.thanh_tien || 0), 0)
 
   const handleCreate = async () => {
-    if (!selectedCT)           { setCreateError('Chua chon cong trinh'); return }
-    if (!form.so_phieu.trim()) { setCreateError('Nhap so phieu'); return }
+    if (!selectedCT)           { setCreateError('Chưa chọn công trình'); return }
+    if (!form.so_phieu.trim()) { setCreateError('Nhập số phiếu'); return }
     const validItems = items.filter(it => it.ten_hang.trim())
-    if (validItems.length === 0) { setCreateError('Them it nhat 1 hang hoa'); return }
+    if (validItems.length === 0) { setCreateError('Thêm ít nhất 1 hàng hóa'); return }
     setCreating(true)
     setCreateError('')
     try {
@@ -162,7 +162,7 @@ export default function PhieuNhap() {
       setShowCreate(false)
       loadData()
     } catch (e) {
-      setCreateError(e.response?.data?.detail || 'Loi tao phieu. Thu lai.')
+      setCreateError(e.response?.data?.detail || 'Lỗi tạo phiếu. Thử lại.')
     } finally {
       setCreating(false)
     }
@@ -188,7 +188,7 @@ export default function PhieuNhap() {
       if (aiItems.length > 0) {
         setItems(aiItems.map(it => ({
           ten_hang: it.ten_hang || it.ten || '',
-          dvt: it.dvt || 'cai',
+          dvt: it.dvt || 'cái',
           so_luong: it.so_luong || 0,
           don_gia: it.don_gia || 0,
           thanh_tien: it.thanh_tien || (it.so_luong || 0) * (it.don_gia || 0),
@@ -196,7 +196,7 @@ export default function PhieuNhap() {
       }
       setCreateMode('manual')
     } catch (e) {
-      setAiError(e.response?.data?.detail || 'Loi doc phieu AI. Thu lai.')
+      setAiError(e.response?.data?.detail || 'Lỗi đọc phiếu AI. Thử lại.')
     } finally {
       setAiLoading(false)
     }
@@ -208,13 +208,13 @@ export default function PhieuNhap() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-800">PHIEU NHAP KHO</h1>
+          <h1 className="text-2xl font-bold text-gray-800">PHIẾU NHẬP KHO</h1>
           <p className="text-gray-500 mt-1 text-sm">
-            {isAdminUser ? 'Tat ca phieu nhap kho tu cac cong trinh' : `Cong trinh: ${selectedCT?.ten_ct || '...'}`}
+            {isAdminUser ? 'Tất cả phiếu nhập kho từ các công trình' : `Công trình:${selectedCT?.ten_ct || '...'}`}
           </p>
           {selectedCT
             ? <span className="inline-block mt-1 px-2 py-0.5 bg-teal-100 text-teal-700 text-xs rounded-full">📌 {selectedCT.ten_ct}</span>
-            : <span className="inline-block mt-1 px-2 py-0.5 bg-blue-100 text-blue-700 text-xs rounded-full">🏢 Tat ca CT</span>
+            : <span className="inline-block mt-1 px-2 py-0.5 bg-blue-100 text-blue-700 text-xs rounded-full">🏢 Tất cả CT</span>
           }
         </div>
         <div className="flex gap-2">
@@ -222,7 +222,7 @@ export default function PhieuNhap() {
             <button onClick={openCreate}
               className="flex items-center gap-2 px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg text-sm font-medium transition-colors shadow-sm">
               <Plus className="w-4 h-4" />
-              Tao phieu NK
+              Tạo phiếu NK
             </button>
           )}
           <button
@@ -243,12 +243,12 @@ export default function PhieuNhap() {
             disabled={exporting || filtered.length === 0}
             className="flex items-center gap-2 px-4 py-2 bg-green-50 hover:bg-green-100 text-green-700 rounded-lg text-sm font-medium transition-colors disabled:opacity-50">
             <FileDown className={`w-4 h-4 ${exporting ? 'animate-bounce' : ''}`} />
-            {exporting ? 'Dang xuat...' : 'Xuat Excel'}
+            {exporting ? 'Đang xuất...' : 'Xuất Excel'}
           </button>
           <button onClick={loadData} disabled={loading}
             className="flex items-center gap-2 px-4 py-2 bg-blue-50 hover:bg-blue-100 text-blue-600 rounded-lg text-sm font-medium transition-colors disabled:opacity-50">
             <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
-            Lam moi
+            Làm mới
           </button>
         </div>
       </div>
@@ -258,21 +258,21 @@ export default function PhieuNhap() {
           <Download className="w-8 h-8 text-blue-500 flex-shrink-0" />
           <div>
             <div className="text-2xl font-bold text-gray-800">{filtered.length}</div>
-            <div className="text-sm text-gray-500">So phieu hien thi</div>
+            <div className="text-sm text-gray-500">Số phiếu hiển thị</div>
           </div>
         </div>
         <div className="bg-white rounded-xl border border-gray-100 p-4 flex items-center gap-3">
           <Download className="w-8 h-8 text-indigo-400 flex-shrink-0" />
           <div>
             <div className="text-2xl font-bold text-gray-800">{phieuList.length}</div>
-            <div className="text-sm text-gray-500">Tong phieu NK</div>
+            <div className="text-sm text-gray-500">Tổng phiếu NK</div>
           </div>
         </div>
         <div className="bg-white rounded-xl border border-gray-100 p-4 flex items-center gap-3">
           <Download className="w-8 h-8 text-teal-500 flex-shrink-0" />
           <div>
             <div className="text-xl font-bold text-gray-800">{formatVND(tongTien)}</div>
-            <div className="text-sm text-gray-500">Tong gia tri</div>
+            <div className="text-sm text-gray-500">Tổng giá trị</div>
           </div>
         </div>
       </div>
@@ -281,11 +281,11 @@ export default function PhieuNhap() {
         <div className="relative flex-1 min-w-[200px]">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
           <input value={search} onChange={e => setSearch(e.target.value)}
-            placeholder="Tim so phieu, nha cung cap..."
+            placeholder="Tìm số phiếu, nhà cung cấp..."
             className="w-full pl-9 pr-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-blue-300" />
         </div>
-        {isAdminUser && <span className="text-xs text-gray-400 italic">Chon CT o sidebar de filter</span>}
-        <span className="text-xs text-gray-400">{filtered.length} phieu</span>
+        {isAdminUser && <span className="text-xs text-gray-400 italic">Chọn CT ở sidebar để lọc</span>}
+        <span className="text-xs text-gray-400">{filtered.length} phiếu</span>
       </div>
 
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
@@ -294,19 +294,19 @@ export default function PhieuNhap() {
             <thead className="bg-gray-50 border-b border-gray-100">
               <tr>
                 <th className="text-left px-4 py-3 text-gray-500 font-medium">#</th>
-                <th className="text-left px-4 py-3 text-gray-500 font-medium">So phieu</th>
-                <th className="text-left px-4 py-3 text-gray-500 font-medium">Ngay</th>
-                {isAdminUser && <th className="text-left px-4 py-3 text-gray-500 font-medium">Cong trinh</th>}
-                <th className="text-left px-4 py-3 text-gray-500 font-medium">Nha cung cap / Ghi chu</th>
-                <th className="text-right px-4 py-3 text-gray-500 font-medium">Tong tien</th>
-                <th className="text-center px-4 py-3 text-gray-500 font-medium">Chi tiet</th>
+                <th className="text-left px-4 py-3 text-gray-500 font-medium">Số phiếu</th>
+                <th className="text-left px-4 py-3 text-gray-500 font-medium">Ngày</th>
+                {isAdminUser && <th className="text-left px-4 py-3 text-gray-500 font-medium">Công trình</th>}
+                <th className="text-left px-4 py-3 text-gray-500 font-medium">Nhà cung cấp / Ghi chú</th>
+                <th className="text-right px-4 py-3 text-gray-500 font-medium">Tổng tiền</th>
+                <th className="text-center px-4 py-3 text-gray-500 font-medium">Chi tiết</th>
               </tr>
             </thead>
             <tbody>
               {loading
-                ? <tr><td colSpan={colSpan} className="py-10 text-center text-gray-400">Dang tai du lieu...</td></tr>
+                ? <tr><td colSpan={colSpan} className="py-10 text-center text-gray-400">Đang tải dữ liệu...</td></tr>
                 : filtered.length === 0
-                  ? <tr><td colSpan={colSpan} className="py-10 text-center text-gray-400">Khong co phieu nhap kho</td></tr>
+                  ? <tr><td colSpan={colSpan} className="py-10 text-center text-gray-400">Không có phiếu nhập kho</td></tr>
                   : filtered.map((p, i) => (
                       <tr key={p.id} className="border-b border-gray-50 hover:bg-gray-50 transition-colors">
                         <td className="px-4 py-3 text-gray-400 text-xs">{i + 1}</td>
@@ -330,7 +330,7 @@ export default function PhieuNhap() {
             {!loading && filtered.length > 0 && (
               <tfoot className="bg-blue-50 border-t-2 border-gray-200">
                 <tr>
-                  <td colSpan={colSpan - 2} className="px-4 py-3 font-bold text-gray-700 text-sm">Tong cong ({filtered.length} phieu)</td>
+                  <td colSpan={colSpan - 2} className="px-4 py-3 font-bold text-gray-700 text-sm">Tổng cộng ({filtered.length} phiếu)</td>
                   <td className="px-4 py-3 text-right font-bold text-blue-700">{formatVND(tongTien)}</td>
                   <td></td>
                 </tr>

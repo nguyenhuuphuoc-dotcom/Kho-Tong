@@ -60,7 +60,7 @@ function GhiChuWidget() {
 
   const dlBorderMap = { overdue: 'border-red-400', soon: 'border-amber-400', ok: 'border-transparent' }
   const dlBadgeMap  = { overdue: 'bg-red-100 text-red-700', soon: 'bg-amber-100 text-amber-700', ok: 'bg-green-100 text-green-700' }
-  const dlLabelMap  = { overdue: '⚠ Qua han', soon: '⏰ Sap den', ok: '✓' }
+  const dlLabelMap  = { overdue: '⚠ Quá hạn', soon: '⏰ Sắp đến', ok: '✓' }
 
   const addNote = () => {
     if (!draft.trim()) return
@@ -81,18 +81,18 @@ function GhiChuWidget() {
     <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
       <div className="flex items-center gap-2 mb-4">
         <StickyNote className="w-4 h-4 text-amber-500" />
-        <h3 className="font-semibold text-gray-800">Ghi chu cong viec</h3>
+        <h3 className="font-semibold text-gray-800">Ghi chú công việc</h3>
         {overdueCount > 0 && (
           <span className="px-1.5 py-0.5 bg-red-100 text-red-700 text-xs font-bold rounded-full animate-pulse">
-            {overdueCount} qua han!
+            {overdueCount} quá hạn!
           </span>
         )}
         {soonCount > 0 && overdueCount === 0 && (
           <span className="px-1.5 py-0.5 bg-amber-100 text-amber-700 text-xs font-medium rounded-full">
-            {soonCount} sap den han
+            {soonCount} sắp đến hạn
           </span>
         )}
-        <span className="ml-auto text-xs text-gray-400">{notes.length} ghi chu</span>
+        <span className="ml-auto text-xs text-gray-400">{notes.length} ghi chú</span>
       </div>
 
       {/* Input thêm mới */}
@@ -102,7 +102,7 @@ function GhiChuWidget() {
             value={draft}
             onChange={e => setDraft(e.target.value)}
             onKeyDown={e => { if (e.key === 'Enter' && e.ctrlKey) addNote() }}
-            placeholder="Nhap ghi chu... (Ctrl+Enter de luu)"
+            placeholder="Nhập ghi chú... (Ctrl+Enter để lưu)"
             rows={2}
             className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-blue-300 resize-none"
           />
@@ -122,14 +122,14 @@ function GhiChuWidget() {
           </div>
           <button onClick={addNote} disabled={!draft.trim()}
             className="flex items-center gap-1 px-3 py-1.5 bg-blue-500 hover:bg-blue-600 text-white rounded-lg text-xs font-medium disabled:opacity-40 transition-colors">
-            <Plus className="w-3 h-3" /> Them
+            <Plus className="w-3 h-3" /> Thêm
           </button>
         </div>
       </div>
 
       {/* Danh sách ghi chú */}
       {notes.length === 0
-        ? <div className="text-center text-gray-300 py-6 text-sm">Chua co ghi chu nao</div>
+        ? <div className="text-center text-gray-300 py-6 text-sm">Chưa có ghi chú nào</div>
         : <div className="grid grid-cols-2 gap-2 max-h-80 overflow-y-auto pr-1">
             {notes.map(n => {
               const c   = colorMap[n.mau] || colorMap.yellow
@@ -153,8 +153,8 @@ function GhiChuWidget() {
                           {editDeadline && <button onClick={() => setEditDeadline('')} className="text-gray-300 hover:text-gray-500"><X className="w-3 h-3" /></button>}
                         </div>
                         <div className="flex gap-2 justify-end">
-                          <button onClick={() => setEditId(null)} className="text-xs text-gray-400 hover:text-gray-600">Huy</button>
-                          <button onClick={() => saveEdit(n.id)} className="text-xs text-blue-600 font-medium hover:text-blue-800">Luu</button>
+                          <button onClick={() => setEditId(null)} className="text-xs text-gray-400 hover:text-gray-600">Hủy</button>
+                          <button onClick={() => saveEdit(n.id)} className="text-xs text-blue-600 font-medium hover:text-blue-800">Lưu</button>
                         </div>
                       </div>
                     : <>
@@ -187,7 +187,7 @@ const fmt = (n) => (n ?? 0).toLocaleString('vi-VN')
 
 function formatVND(n) {
   const num = n ?? 0
-  if (num >= 1_000_000_000) return (num / 1_000_000_000).toFixed(1) + ' ty'
+  if (num >= 1_000_000_000) return (num / 1_000_000_000).toFixed(1) + ' tỷ'
   if (num >= 1_000_000) return (num / 1_000_000).toFixed(0) + ' tr'
   return num.toLocaleString('vi-VN')
 }
@@ -249,11 +249,11 @@ export default function Dashboard() {
   const tongPhieu = phieuNhap + phieuXuat
 
   const barChartData = {
-    labels: bieuDoData.length ? bieuDoData.map(d => d.period) : ['Chua co du lieu'],
+    labels: bieuDoData.length ? bieuDoData.map(d => d.period) : ['Chưa có dữ liệu'],
     datasets: [
       {
         type: 'bar',
-        label: 'Nhap',
+        label: 'Nhập',
         data: bieuDoData.map(d => d.tong_nk),
         backgroundColor: 'rgba(59, 130, 246, 0.8)',
         borderRadius: 4,
@@ -261,7 +261,7 @@ export default function Dashboard() {
       },
       {
         type: 'bar',
-        label: 'Xuat',
+        label: 'Xuất',
         data: bieuDoData.map(d => d.tong_xk),
         backgroundColor: 'rgba(249, 115, 22, 0.8)',
         borderRadius: 4,
@@ -282,7 +282,7 @@ export default function Dashboard() {
   }
 
   const donutData = {
-    labels: ['Nhap kho', 'Xuat kho'],
+    labels: ['Nhập kho', 'Xuất kho'],
     datasets: [{
       data: [phieuNhap || 1, phieuXuat || 1],
       backgroundColor: ['rgba(34, 197, 94, 0.85)', 'rgba(249, 115, 22, 0.85)'],
@@ -313,12 +313,12 @@ export default function Dashboard() {
       {/* Title */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-800">BAO CAO TONG HOP</h1>
+          <h1 className="text-2xl font-bold text-gray-800">BÁO CÁO TỔNG HỢP</h1>
           <div className="flex items-center gap-2 mt-1">
-            <p className="text-gray-500 text-sm">Theo doi hoat dong nhap - xuat - ton kho</p>
+            <p className="text-gray-500 text-sm">Theo dõi hoạt động nhập - xuất - tồn kho</p>
             {selectedCT
               ? <span className="bg-teal-100 text-teal-700 text-xs font-semibold px-2.5 py-0.5 rounded-full">📌 {selectedCT.ten_ct}</span>
-              : <span className="bg-blue-100 text-blue-700 text-xs font-semibold px-2.5 py-0.5 rounded-full">🏢 Tat ca cong trinh</span>
+              : <span className="bg-blue-100 text-blue-700 text-xs font-semibold px-2.5 py-0.5 rounded-full">🏢 Tất cả công trình</span>
             }
           </div>
         </div>
@@ -328,18 +328,18 @@ export default function Dashboard() {
           className="flex items-center gap-2 px-4 py-2 bg-blue-50 hover:bg-blue-100 text-blue-600 rounded-lg text-sm font-medium transition-colors disabled:opacity-50"
         >
           <RotateCcw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
-          Lam moi
+          Làm mới
         </button>
       </div>
 
       {/* KPI Cards */}
       <div className="flex gap-4">
-        <KPICard loading={loading} icon={Building2} iconBg="bg-blue-500" title="Tong cong trinh" value={kpi?.so_cong_trinh ?? '—'} subtitle="Dang hoat dong" />
-        <KPICard loading={loading} icon={Download} iconBg="bg-green-500" title="Phieu nhap" value={kpi?.so_phieu_nk ?? '—'} subtitle="Tong so phieu" />
-        <KPICard loading={loading} icon={Upload} iconBg="bg-orange-500" title="Phieu xuat" value={kpi?.so_phieu_xk ?? '—'} subtitle="Tong so phieu" />
-        <KPICard loading={loading} icon={Package} iconBg="bg-purple-500" title="Mat hang quan ly" value={fmt(kpi?.so_mat_hang)} subtitle="Ma hang hoa" />
-        <KPICard loading={loading} icon={DollarSign} iconBg="bg-teal-500" title="Tong tien nhap" value={formatVND(kpi?.tong_tien_nk)} subtitle="Gia tri phieu NK" />
-        <KPICard loading={loading} icon={AlertTriangle} iconBg="bg-red-500" title="Canh bao het hang" value={kpi?.so_canh_bao ?? '—'} subtitle="Can kiem tra" valueColor="text-red-600" />
+        <KPICard loading={loading} icon={Building2} iconBg="bg-blue-500" title="Tổng công trình" value={kpi?.so_cong_trinh ?? '—'} subtitle="Đang hoạt động" />
+        <KPICard loading={loading} icon={Download} iconBg="bg-green-500" title="Phiếu nhập" value={kpi?.so_phieu_nk ?? '—'} subtitle="Tổng số phiếu" />
+        <KPICard loading={loading} icon={Upload} iconBg="bg-orange-500" title="Phiếu xuất" value={kpi?.so_phieu_xk ?? '—'} subtitle="Tổng số phiếu" />
+        <KPICard loading={loading} icon={Package} iconBg="bg-purple-500" title="Mặt hàng quản lý" value={fmt(kpi?.so_mat_hang)} subtitle="Mã hàng hóa" />
+        <KPICard loading={loading} icon={DollarSign} iconBg="bg-teal-500" title="Tổng tiền nhập" value={formatVND(kpi?.tong_tien_nk)} subtitle="Giá trị phiếu NK" />
+        <KPICard loading={loading} icon={AlertTriangle} iconBg="bg-red-500" title="Cảnh báo hết hàng" value={kpi?.so_canh_bao ?? '—'} subtitle="Cần kiểm tra" valueColor="text-red-600" />
       </div>
 
       {/* Row 2: Chart + Donut + Top Vat tu */}
@@ -347,19 +347,19 @@ export default function Dashboard() {
         {/* Bar Chart */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="font-semibold text-gray-800">Bieu do Nhap - Xuat</h3>
+            <h3 className="font-semibold text-gray-800">Biểu đồ Nhập - Xuất</h3>
             <select
               value={chartMode}
               onChange={e => setChartMode(e.target.value)}
               className="text-xs border border-gray-200 rounded-lg px-2 py-1 text-gray-600 focus:outline-none focus:border-blue-300"
             >
-              <option value="day">Theo ngay</option>
-              <option value="month">Theo thang</option>
+              <option value="day">Theo ngày</option>
+              <option value="month">Theo tháng</option>
             </select>
           </div>
           <div style={{ height: 220 }}>
             {loading
-              ? <div className="h-full flex items-center justify-center text-gray-400 text-sm">Dang tai...</div>
+              ? <div className="h-full flex items-center justify-center text-gray-400 text-sm">Đang tải...</div>
               : <Bar data={barChartData} options={barChartOptions} />
             }
           </div>
@@ -367,16 +367,16 @@ export default function Dashboard() {
 
         {/* Donut Chart */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
-          <h3 className="font-semibold text-gray-800 mb-4">Ty le nhap xuat</h3>
+          <h3 className="font-semibold text-gray-800 mb-4">Tỷ lệ nhập xuất</h3>
           <div style={{ height: 200 }} className="relative">
             {loading
-              ? <div className="h-full flex items-center justify-center text-gray-400 text-sm">Dang tai...</div>
+              ? <div className="h-full flex items-center justify-center text-gray-400 text-sm">Đang tải...</div>
               : <>
                   <Doughnut data={donutData} options={donutOptions} />
                   <div className="absolute inset-0 flex items-center justify-center pointer-events-none" style={{ top: '-10px' }}>
                     <div className="text-center">
                       <div className="text-xl font-bold text-gray-800">{fmt(tongPhieu)}</div>
-                      <div className="text-xs text-gray-400">Tong phieu</div>
+                      <div className="text-xs text-gray-400">Tổng phiếu</div>
                     </div>
                   </div>
                 </>
@@ -386,18 +386,18 @@ export default function Dashboard() {
 
         {/* Top Vat tu */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
-          <h3 className="font-semibold text-gray-800 mb-4">Top Vat tu xuat nhieu nhat</h3>
+          <h3 className="font-semibold text-gray-800 mb-4">Top Vật tư xuất nhiều nhất</h3>
           {loading
-            ? <div className="text-gray-400 text-sm text-center py-4">Dang tai...</div>
+            ? <div className="text-gray-400 text-sm text-center py-4">Đang tải...</div>
             : topVatTu.length === 0
-              ? <div className="text-gray-400 text-sm text-center py-4">Chua co du lieu</div>
+              ? <div className="text-gray-400 text-sm text-center py-4">Chưa có dữ liệu</div>
               : <table className="w-full text-xs">
                   <thead>
                     <tr className="border-b border-gray-100">
                       <th className="text-left py-2 text-gray-400 font-medium w-6">#</th>
-                      <th className="text-left py-2 text-gray-400 font-medium">Ten hang</th>
+                      <th className="text-left py-2 text-gray-400 font-medium">Tên hàng</th>
                       <th className="text-right py-2 text-gray-400 font-medium">SL</th>
-                      <th className="text-right py-2 text-gray-400 font-medium">Tien</th>
+                      <th className="text-right py-2 text-gray-400 font-medium">Tiền</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -419,24 +419,24 @@ export default function Dashboard() {
       <div className="grid grid-cols-2 gap-4">
         {/* Tong hop theo cong trinh */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
-          <h3 className="font-semibold text-gray-800 mb-4">Tong hop theo cong trinh</h3>
+          <h3 className="font-semibold text-gray-800 mb-4">Tổng hợp theo công trình</h3>
           {loading
-            ? <div className="text-gray-400 text-sm text-center py-4">Dang tai...</div>
+            ? <div className="text-gray-400 text-sm text-center py-4">Đang tải...</div>
             : <div className="overflow-x-auto">
                 <table className="w-full text-xs">
                   <thead>
                     <tr className="border-b border-gray-100 text-gray-400">
                       <th className="text-left py-2 font-medium">#</th>
-                      <th className="text-left py-2 font-medium">Cong trinh</th>
-                      <th className="text-right py-2 font-medium">P.Nhap</th>
-                      <th className="text-right py-2 font-medium">Tien NK</th>
-                      <th className="text-right py-2 font-medium">P.Xuat</th>
-                      <th className="text-right py-2 font-medium">Tien XK</th>
+                      <th className="text-left py-2 font-medium">Công trình</th>
+                      <th className="text-right py-2 font-medium">P.Nhập</th>
+                      <th className="text-right py-2 font-medium">Tiền NK</th>
+                      <th className="text-right py-2 font-medium">P.Xuất</th>
+                      <th className="text-right py-2 font-medium">Tiền XK</th>
                     </tr>
                   </thead>
                   <tbody>
                     {bangCT.length === 0
-                      ? <tr><td colSpan={6} className="py-4 text-center text-gray-400">Chua co du lieu</td></tr>
+                      ? <tr><td colSpan={6} className="py-4 text-center text-gray-400">Chưa có dữ liệu</td></tr>
                       : bangCT.map((ct, i) => (
                           <tr key={ct.id || i} className="border-b border-gray-50 hover:bg-gray-50">
                             <td className="py-2 text-gray-400">{i + 1}</td>
@@ -450,7 +450,7 @@ export default function Dashboard() {
                     }
                     {bangCT.length > 0 && (
                       <tr className="border-t-2 border-gray-200 font-bold bg-gray-50">
-                        <td className="py-2 text-gray-600" colSpan={2}>Tong cong</td>
+                        <td className="py-2 text-gray-600" colSpan={2}>Tổng cộng</td>
                         <td className="py-2 text-right text-green-700">{tongCT.so_phieu_nk}</td>
                         <td className="py-2 text-right text-gray-800">{formatVND(tongCT.tong_tien_nk)}</td>
                         <td className="py-2 text-right text-orange-700">{tongCT.so_phieu_xk}</td>
@@ -466,17 +466,17 @@ export default function Dashboard() {
         {/* Canh bao ton kho */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="font-semibold text-gray-800">Canh bao het hang</h3>
+            <h3 className="font-semibold text-gray-800">Cảnh báo hết hàng</h3>
             <span className="bg-red-100 text-red-600 text-xs font-semibold px-2 py-0.5 rounded-full">
-              {canhBao.length} canh bao
+              {canhBao.length} cảnh báo
             </span>
           </div>
           {loading
-            ? <div className="text-gray-400 text-sm text-center py-4">Dang tai...</div>
+            ? <div className="text-gray-400 text-sm text-center py-4">Đang tải...</div>
             : canhBao.length === 0
               ? <div className="flex flex-col items-center justify-center py-8 text-gray-400">
                   <CheckCircle className="w-10 h-10 text-green-400 mb-2" />
-                  <span className="text-sm">Khong co canh bao ton kho</span>
+                  <span className="text-sm">Không có cảnh báo tồn kho</span>
                 </div>
               : <div className="space-y-2 max-h-64 overflow-y-auto">
                   {canhBao.map((cb, i) => (
@@ -486,7 +486,7 @@ export default function Dashboard() {
                         <div className="text-sm font-medium text-gray-800 truncate">{cb.ten_hang}</div>
                         {cb.ma_ct && <div className="text-xs text-gray-500">{cb.ma_ct}</div>}
                         <div className="text-xs text-red-600 font-medium mt-0.5">
-                          Ton kho: {fmt(cb.ton_cuoi)} {cb.dvt || ''}
+                          Tồn kho: {fmt(cb.ton_cuoi)} {cb.dvt || ''}
                         </div>
                       </div>
                     </div>
@@ -501,13 +501,13 @@ export default function Dashboard() {
 
       {/* Flow Diagram */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
-        <h3 className="font-semibold text-gray-800 mb-4">Luong du lieu he thong</h3>
+        <h3 className="font-semibold text-gray-800 mb-4">Luồng dữ liệu hệ thống</h3>
         <div className="flex items-stretch gap-2">
           {[
-            { icon: Smartphone, color: 'bg-blue-500', label: 'APP CON', items: [`${kpi?.so_cong_trinh || 0} app cong trinh`, 'Nhap / xuat kho', 'Offline capable'] },
-            { icon: RefreshCw, color: 'bg-green-500', label: 'DONG BO', items: ['Auto sync Supabase', 'Real-time update', 'Delta sync'] },
-            { icon: Database, color: 'bg-purple-500', label: 'DATABASE TONG', items: ['Supabase PostgreSQL', 'Real-time', 'Backup tu dong'] },
-            { icon: Monitor, color: 'bg-orange-500', label: 'WEB APP', items: ['Dashboard', 'Bao cao', 'Quan tri'] },
+            { icon: Smartphone, color: 'bg-blue-500', label: 'APP CON', items: [`${kpi?.so_cong_trinh || 0} app công trình`, 'Nhập / xuất kho', 'Offline capable'] },
+            { icon: RefreshCw, color: 'bg-green-500', label: 'ĐỒNG BỘ', items: ['Auto sync Supabase', 'Real-time update', 'Delta sync'] },
+            { icon: Database, color: 'bg-purple-500', label: 'DATABASE TỔNG', items: ['Supabase PostgreSQL', 'Real-time', 'Backup tự động'] },
+            { icon: Monitor, color: 'bg-orange-500', label: 'WEB APP', items: ['Dashboard', 'Báo cáo', 'Quản trị'] },
           ].map((node, i, arr) => (
             <React.Fragment key={i}>
               <div className="flex-1 border border-gray-100 rounded-xl p-3 flex flex-col items-center text-center gap-2">

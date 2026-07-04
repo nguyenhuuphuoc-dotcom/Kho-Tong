@@ -6,7 +6,7 @@ import { useCongTrinh } from '../context/CongTrinhContext'
 const fmt = (n) => (n ?? 0).toLocaleString('vi-VN')
 function formatVND(n) {
   const num = n ?? 0
-  if (num >= 1_000_000_000) return (num / 1_000_000_000).toFixed(1) + ' ty'
+  if (num >= 1_000_000_000) return (num / 1_000_000_000).toFixed(1) + ' tỷ'
   if (num >= 1_000_000) return (num / 1_000_000).toFixed(0) + ' tr'
   return num.toLocaleString('vi-VN')
 }
@@ -77,43 +77,43 @@ export default function BaoCao() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-800">BAO CAO CHI TIET</h1>
+          <h1 className="text-2xl font-bold text-gray-800">BÁO CÁO CHI TIẾT</h1>
           <div className="flex items-center gap-2 mt-1">
-            <p className="text-gray-500 text-sm">Tra cuu phieu NK / XK theo thoi gian va cong trinh</p>
+            <p className="text-gray-500 text-sm">Tra cứu phiếu NK / XK theo thời gian và công trình</p>
             {selectedCT
               ? <span className="bg-teal-100 text-teal-700 text-xs font-semibold px-2.5 py-0.5 rounded-full">📌 {selectedCT.ten_ct}</span>
-              : <span className="bg-blue-100 text-blue-700 text-xs font-semibold px-2.5 py-0.5 rounded-full">🏢 Tat ca CT</span>
+              : <span className="bg-blue-100 text-blue-700 text-xs font-semibold px-2.5 py-0.5 rounded-full">🏢 Tất cả CT</span>
             }
           </div>
         </div>
         <button onClick={loadData} disabled={loading}
           className="flex items-center gap-2 px-4 py-2 bg-blue-50 hover:bg-blue-100 text-blue-600 rounded-lg text-sm font-medium transition-colors disabled:opacity-50">
           <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
-          Lam moi
+          Làm mới
         </button>
       </div>
 
       {/* KPI nhanh */}
       <div className="grid grid-cols-4 gap-4">
         <div className="bg-white rounded-xl border border-gray-100 p-4">
-          <div className="text-xs text-gray-400 mb-1">Phieu Nhap Kho</div>
+          <div className="text-xs text-gray-400 mb-1">Phiếu Nhập Kho</div>
           <div className="text-2xl font-bold text-green-600">{nkList.length}</div>
-          <div className="text-xs text-gray-400 mt-0.5">phieu trong ky</div>
+          <div className="text-xs text-gray-400 mt-0.5">phiếu trong kỳ</div>
         </div>
         <div className="bg-white rounded-xl border border-gray-100 p-4">
-          <div className="text-xs text-gray-400 mb-1">Tong Tien NK</div>
+          <div className="text-xs text-gray-400 mb-1">Tổng Tiền NK</div>
           <div className="text-xl font-bold text-green-700">{formatVND(tongNK)}</div>
-          <div className="text-xs text-gray-400 mt-0.5">gia tri nhap kho</div>
+          <div className="text-xs text-gray-400 mt-0.5">giá trị nhập kho</div>
         </div>
         <div className="bg-white rounded-xl border border-gray-100 p-4">
-          <div className="text-xs text-gray-400 mb-1">Phieu Xuat Kho</div>
+          <div className="text-xs text-gray-400 mb-1">Phiếu Xuất Kho</div>
           <div className="text-2xl font-bold text-orange-500">{xkList.length}</div>
-          <div className="text-xs text-gray-400 mt-0.5">phieu trong ky</div>
+          <div className="text-xs text-gray-400 mt-0.5">phiếu trong kỳ</div>
         </div>
         <div className="bg-white rounded-xl border border-gray-100 p-4">
-          <div className="text-xs text-gray-400 mb-1">Tong Tien XK</div>
+          <div className="text-xs text-gray-400 mb-1">Tổng Tiền XK</div>
           <div className="text-xl font-bold text-orange-600">{formatVND(tongXK)}</div>
-          <div className="text-xs text-gray-400 mt-0.5">gia tri xuat kho</div>
+          <div className="text-xs text-gray-400 mt-0.5">giá trị xuất kho</div>
         </div>
       </div>
 
@@ -121,27 +121,27 @@ export default function BaoCao() {
       <div className="bg-white rounded-xl border border-gray-100 p-4 flex gap-3 flex-wrap items-center">
         <select value={loaiFilter} onChange={e => setLoaiFilter(e.target.value)}
           className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-300 text-gray-600">
-          <option value="ALL">Tat ca loai</option>
-          <option value="NK">Nhap kho</option>
-          <option value="XK">Xuat kho</option>
+          <option value="ALL">Tất cả loại</option>
+          <option value="NK">Nhập kho</option>
+          <option value="XK">Xuất kho</option>
         </select>
         <div className="flex items-center gap-2">
-          <label className="text-xs text-gray-400 whitespace-nowrap">Tu ngay:</label>
+          <label className="text-xs text-gray-400 whitespace-nowrap">Từ ngày:</label>
           <input type="date" value={tuNgay} onChange={e => setTuNgay(e.target.value)}
             className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-300" />
         </div>
         <div className="flex items-center gap-2">
-          <label className="text-xs text-gray-400 whitespace-nowrap">Den ngay:</label>
+          <label className="text-xs text-gray-400 whitespace-nowrap">Đến ngày:</label>
           <input type="date" value={denNgay} onChange={e => setDenNgay(e.target.value)}
             className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-300" />
         </div>
         <div className="relative flex-1 min-w-[180px]">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
           <input value={search} onChange={e => setSearch(e.target.value)}
-            placeholder="Tim so phieu, doi tac / NCC..."
+            placeholder="Tìm số phiếu, đối tác / NCC..."
             className="w-full pl-9 pr-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-blue-300" />
         </div>
-        <span className="text-xs text-gray-400 bg-gray-100 px-3 py-2 rounded-lg font-medium">{filtered.length} ket qua</span>
+        <span className="text-xs text-gray-400 bg-gray-100 px-3 py-2 rounded-lg font-medium">{filtered.length} kết quả</span>
       </div>
 
       {/* Table */}
@@ -151,20 +151,20 @@ export default function BaoCao() {
             <thead className="bg-gray-50 border-b border-gray-100">
               <tr>
                 <th className="text-left px-4 py-3 text-gray-500 font-medium">#</th>
-                <th className="text-left px-4 py-3 text-gray-500 font-medium">So phieu</th>
-                <th className="text-left px-4 py-3 text-gray-500 font-medium">Ngay</th>
-                <th className="text-left px-4 py-3 text-gray-500 font-medium">Loai</th>
-                <th className="text-left px-4 py-3 text-gray-500 font-medium">Cong trinh</th>
-                <th className="text-left px-4 py-3 text-gray-500 font-medium">Doi tac / NCC</th>
-                <th className="text-right px-4 py-3 text-gray-500 font-medium">Tong tien</th>
-                <th className="text-center px-4 py-3 text-gray-500 font-medium">Chi tiet</th>
+                <th className="text-left px-4 py-3 text-gray-500 font-medium">Số phiếu</th>
+                <th className="text-left px-4 py-3 text-gray-500 font-medium">Ngày</th>
+                <th className="text-left px-4 py-3 text-gray-500 font-medium">Loại</th>
+                <th className="text-left px-4 py-3 text-gray-500 font-medium">Công trình</th>
+                <th className="text-left px-4 py-3 text-gray-500 font-medium">Đối tác / NCC</th>
+                <th className="text-right px-4 py-3 text-gray-500 font-medium">Tổng tiền</th>
+                <th className="text-center px-4 py-3 text-gray-500 font-medium">Chi tiết</th>
               </tr>
             </thead>
             <tbody>
               {loading
-                ? <tr><td colSpan={8} className="py-12 text-center text-gray-400">Dang tai du lieu...</td></tr>
+                ? <tr><td colSpan={8} className="py-12 text-center text-gray-400">Đang tải dữ liệu...</td></tr>
                 : filtered.length === 0
-                  ? <tr><td colSpan={8} className="py-12 text-center text-gray-400">Khong co du lieu trong khoang thoi gian nay</td></tr>
+                  ? <tr><td colSpan={8} className="py-12 text-center text-gray-400">Không có dữ liệu trong khoảng thời gian này</td></tr>
                   : filtered.map((p, i) => (
                       <tr key={p.id} className="border-b border-gray-50 hover:bg-gray-50 transition-colors">
                         <td className="px-4 py-3 text-gray-400 text-xs">{i + 1}</td>
@@ -173,7 +173,7 @@ export default function BaoCao() {
                         <td className="px-4 py-3">
                           <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${
                             p.loai === 'NK' ? 'bg-green-100 text-green-700' : 'bg-orange-100 text-orange-700'
-                          }`}>{p.loai === 'NK' ? 'Nhap kho' : 'Xuat kho'}</span>
+                          }`}>{p.loai === 'NK' ? 'Nhập kho' : 'Xuất kho'}</span>
                         </td>
                         <td className="px-4 py-3 text-gray-600 text-xs truncate max-w-[150px]" title={ctMap[p.cong_trinh_id]}>
                           {ctMap[p.cong_trinh_id] || '—'}
@@ -198,7 +198,7 @@ export default function BaoCao() {
               <tfoot className="bg-gray-50 border-t-2 border-gray-200">
                 <tr>
                   <td colSpan={6} className="px-4 py-3 font-bold text-gray-700 text-sm">
-                    Tong cong ({filtered.length} phieu)
+                    Tổng cộng ({filtered.length} phiếu)
                   </td>
                   <td className="px-4 py-3 text-right text-xs font-bold text-gray-700 space-y-0.5">
                     <div className="text-green-700">NK: {formatVND(tongNK)}</div>
@@ -212,7 +212,7 @@ export default function BaoCao() {
         </div>
       </div>
 
-      {/* Modal chi tiet */}
+      {/* Modal chi tiết */}
       {selectedPhieu && (
         <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50 p-4"
           onClick={e => { if (e.target === e.currentTarget) setSelectedPhieu(null) }}>
@@ -225,7 +225,7 @@ export default function BaoCao() {
                   </span>
                   <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${
                     selectedPhieu.loai === 'NK' ? 'bg-green-100 text-green-700' : 'bg-orange-100 text-orange-700'
-                  }`}>{selectedPhieu.loai === 'NK' ? 'Nhap kho' : 'Xuat kho'}</span>
+                  }`}>{selectedPhieu.loai === 'NK' ? 'Nhập kho' : 'Xuất kho'}</span>
                 </h3>
                 <p className="text-sm text-gray-500 mt-0.5">
                   {selectedPhieu.ngay}
@@ -240,18 +240,18 @@ export default function BaoCao() {
             </div>
             <div className="overflow-auto flex-1 p-5">
               {loadingChiTiet
-                ? <div className="text-center text-gray-400 py-8">Dang tai...</div>
+                ? <div className="text-center text-gray-400 py-8">Đang tải...</div>
                 : chiTiet.length === 0
-                  ? <div className="text-center text-gray-400 py-8">Khong co chi tiet</div>
+                  ? <div className="text-center text-gray-400 py-8">Không có chi tiết</div>
                   : <table className="w-full text-sm">
                       <thead className="bg-gray-50 sticky top-0">
                         <tr>
                           <th className="text-left p-2 text-gray-500 font-medium">#</th>
-                          <th className="text-left p-2 text-gray-500 font-medium">Ten hang</th>
+                          <th className="text-left p-2 text-gray-500 font-medium">Tên hàng</th>
                           <th className="text-right p-2 text-gray-500 font-medium">SL</th>
                           <th className="text-left p-2 text-gray-500 font-medium">DVT</th>
-                          <th className="text-right p-2 text-gray-500 font-medium">Don gia</th>
-                          <th className="text-right p-2 text-gray-500 font-medium">Thanh tien</th>
+                          <th className="text-right p-2 text-gray-500 font-medium">Đơn giá</th>
+                          <th className="text-right p-2 text-gray-500 font-medium">Thành tiền</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -270,9 +270,9 @@ export default function BaoCao() {
               }
             </div>
             <div className="p-4 border-t bg-gray-50 flex justify-between items-center">
-              <span className="text-sm text-gray-500">{chiTiet.length} dong hang</span>
+              <span className="text-sm text-gray-500">{chiTiet.length} dòng hàng</span>
               <span className={`font-bold text-base ${selectedPhieu.loai === 'NK' ? 'text-green-700' : 'text-orange-600'}`}>
-                Tong: {formatVND(selectedPhieu.tong_tien)}
+                Tổng: {formatVND(selectedPhieu.tong_tien)}
               </span>
             </div>
           </div>

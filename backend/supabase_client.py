@@ -226,6 +226,38 @@ def get_ton_kho_by_ct(cong_trinh_id: int = None, ma_ct: str = None) -> list:
     return get_ton_kho_all()
 
 
+def get_phieu_ids_by_ct(cong_trinh_id: int) -> list:
+    """Lấy toàn bộ id phiếu của 1 công trình (có phân trang)."""
+    ids, offset = [], 0
+    while True:
+        rows = select("phieu", query="id",
+                      filters=f"cong_trinh_id=eq.{cong_trinh_id}&limit=1000&offset={offset}")
+        ids.extend(r["id"] for r in rows)
+        if len(rows) < 1000:
+            break
+        offset += 1000
+    return ids
+
+
+def delete_chi_tiet_by_hang(cong_trinh_id: int, ten_hang: str) -> int:
+    """
+    Xóa mọi dòng chi tiết phiếu của 1 mặt hàng trong 1 công trình
+    (dùng khi xóa hẳn 1 hàng khỏi tồn kho). Trả về số dòng đã xóa.
+    """
+    from urllib.parse import quote
+    ids = [str(i) for i in get_phieu_ids_by_ct(cong_trinh_id)]
+    if not ids:
+        return 0
+    ten_enc = quote(ten_hang, safe="")
+    deleted = 0
+    for i in range(0, len(ids), 100):
+        chunk = ",".join(ids[i:i + 100])
+        rows = delete("chi_tiet_phieu",
+                      filters=f"phieu_id=in.({chunk})&ten_hang=eq.{ten_enc}")
+        deleted += len(rows) if isinstance(rows, list) else 0
+    return deleted
+
+
 # ── Thống kê nhanh ────────────────────────────────────────────
 
 def get_thong_ke_tong() -> dict:

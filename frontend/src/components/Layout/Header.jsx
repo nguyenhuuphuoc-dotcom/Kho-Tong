@@ -7,19 +7,19 @@ import { getPhieuList, getTonKho } from '../../api'
 import { exportBaoCaoTongHop, exportPhieuList } from '../../utils/exportExcel'
 
 const routeNames = {
-  '/':             'Bao cao tong hop',
-  '/phieu-nhap':   'Phieu nhap kho',
-  '/phieu-xuat':   'Phieu xuat kho',
-  '/ton-kho':      'Ton kho',
-  '/danh-muc':     'Vat tu - Hang hoa',
-  '/bao-cao':      'Bao cao chi tiet',
-  '/cong-trinh':   'Danh sach cong trinh',
-  '/nha-cung-cap': 'Nha cung cap',
-  '/ai-reader':    'Nhap kho AI',
-  '/cai-dat':      'Cau hinh',
-  '/canh-bao':     'Canh bao ton kho',
-  '/nguoi-dung':   'Nguoi dung',
-  '/phan-quyen':   'Phan quyen',
+  '/':             'Báo cáo tổng hợp',
+  '/phieu-nhap':   'Phiếu nhập kho',
+  '/phieu-xuat':   'Phiếu xuất kho',
+  '/ton-kho':      'Tồn kho',
+  '/danh-muc':     'Vật tư - Hàng hóa',
+  '/bao-cao':      'Báo cáo chi tiết',
+  '/cong-trinh':   'Danh sách công trình',
+  '/nha-cung-cap': 'Nhà cung cấp',
+  '/ai-reader':    'Nhập kho AI',
+  '/cai-dat':      'Cấu hình',
+  '/canh-bao':     'Cảnh báo tồn kho',
+  '/nguoi-dung':   'Người dùng',
+  '/phan-quyen':   'Phân quyền',
 }
 
 const formatVN = (d) => {
@@ -30,9 +30,9 @@ const formatVN = (d) => {
 
 const PRESETS = [
   { label: 'T10-12/2025', from: '2025-10-01', to: '2025-12-31' },
-  { label: 'Nam 2025',    from: '2025-01-01', to: '2025-12-31' },
-  { label: 'Nam 2026',    from: '2026-01-01', to: new Date().toISOString().split('T')[0] },
-  { label: 'Tat ca',      from: '2025-01-01', to: new Date().toISOString().split('T')[0] },
+  { label: 'Năm 2025',    from: '2025-01-01', to: '2025-12-31' },
+  { label: 'Năm 2026',    from: '2026-01-01', to: new Date().toISOString().split('T')[0] },
+  { label: 'Tất cả',      from: '2025-01-01', to: new Date().toISOString().split('T')[0] },
 ]
 
 export default function Header({ notificationCount = 5 }) {
@@ -47,7 +47,7 @@ export default function Header({ notificationCount = 5 }) {
   const [exporting, setExporting]   = useState(false)
 
   const pickerRef = useRef(null)
-  const pageName  = routeNames[location.pathname] || 'Trang chu'
+  const pageName  = routeNames[location.pathname] || 'Trang chủ'
 
   // Đóng picker khi click bên ngoài
   useEffect(() => {
@@ -78,10 +78,10 @@ export default function Header({ notificationCount = 5 }) {
   }
 
   const exportLabel = location.pathname === '/phieu-nhap'
-    ? 'Xuat NK'
+    ? 'Xuất NK'
     : location.pathname === '/phieu-xuat'
-      ? 'Xuat XK'
-      : 'Xuat bao cao'
+      ? 'Xuất XK'
+      : 'Xuất báo cáo'
 
   const handleExport = async () => {
     setExporting(true)
@@ -128,7 +128,7 @@ export default function Header({ notificationCount = 5 }) {
         })
       }
     } catch (e) {
-      alert('Loi xuat bao cao: ' + (e.message || 'Thu lai.'))
+      alert('Lỗi xuất báo cáo: ' + (e.message || 'Thử lại.'))
     } finally {
       setExporting(false)
     }
@@ -142,7 +142,7 @@ export default function Header({ notificationCount = 5 }) {
       {/* Breadcrumb */}
       <div className="flex items-center gap-2 text-sm">
         <Home className="w-4 h-4 text-gray-400" />
-        <span className="text-gray-400">Trang chu</span>
+        <span className="text-gray-400">Trang chủ</span>
         <ChevronRight className="w-3 h-3 text-gray-300" />
         <span className="text-gray-700 font-medium">{pageName}</span>
       </div>
@@ -172,12 +172,12 @@ export default function Header({ notificationCount = 5 }) {
               style={{ width: 280 }}
             >
               <div className="px-4 pt-3 pb-2 border-b border-gray-100">
-                <span className="text-sm font-semibold text-gray-700">Chon khoang thoi gian</span>
+                <span className="text-sm font-semibold text-gray-700">Chọn khoảng thời gian</span>
               </div>
 
               <div className="p-4 space-y-3">
                 <div>
-                  <label className="text-xs text-gray-500 mb-1 block">Tu ngay</label>
+                  <label className="text-xs text-gray-500 mb-1 block">Từ ngày</label>
                   <input
                     type="date"
                     value={tempFrom}
@@ -186,7 +186,7 @@ export default function Header({ notificationCount = 5 }) {
                   />
                 </div>
                 <div>
-                  <label className="text-xs text-gray-500 mb-1 block">Den ngay</label>
+                  <label className="text-xs text-gray-500 mb-1 block">Đến ngày</label>
                   <input
                     type="date"
                     value={tempTo}
@@ -197,7 +197,7 @@ export default function Header({ notificationCount = 5 }) {
 
                 {/* Quick presets */}
                 <div>
-                  <div className="text-xs text-gray-400 mb-1.5">Chon nhanh</div>
+                  <div className="text-xs text-gray-400 mb-1.5">Chọn nhanh</div>
                   <div className="flex flex-wrap gap-1.5">
                     {PRESETS.map(p => (
                       <button
@@ -216,13 +216,13 @@ export default function Header({ notificationCount = 5 }) {
                     onClick={applyDate}
                     className="flex-1 bg-blue-500 text-white text-sm py-2 rounded-lg hover:bg-blue-600 transition-colors font-semibold"
                   >
-                    Ap dung
+                    Áp dụng
                   </button>
                   <button
                     onClick={() => setShowPicker(false)}
                     className="flex-1 border border-gray-200 text-gray-600 text-sm py-2 rounded-lg hover:bg-gray-50 transition-colors"
                   >
-                    Huy
+                    Hủy
                   </button>
                 </div>
               </div>
@@ -237,7 +237,7 @@ export default function Header({ notificationCount = 5 }) {
           {exporting
             ? <Loader className="w-4 h-4 animate-spin" />
             : <Download className="w-4 h-4" />}
-          <span>{exporting ? 'Dang xuat...' : exportLabel}</span>
+          <span>{exporting ? 'Đang xuất...' : exportLabel}</span>
         </button>
 
         <div className="w-px h-6 bg-gray-200" />
@@ -283,7 +283,7 @@ export default function Header({ notificationCount = 5 }) {
                   className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors"
                 >
                   <LogOut className="w-4 h-4" />
-                  Dang xuat
+                  Đăng xuất
                 </button>
               </div>
             </>

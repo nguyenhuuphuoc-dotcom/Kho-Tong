@@ -14,14 +14,14 @@ export default function Login() {
 
   const handleSubmit = async (e) => {
     e.preventDefault()
-    if (!email || !password) { setError('Vui long nhap day du email va mat khau'); return }
+    if (!email || !password) { setError('Vui lòng nhập đầy đủ email và mật khẩu'); return }
     setLoading(true)
     setError('')
     try {
       await login(email, password)
       navigate('/')
     } catch (err) {
-      setError(err.response?.data?.detail || err.message || 'Dang nhap that bai')
+      setError(err.response?.data?.detail || err.message || 'Đăng nhập thất bại')
     } finally {
       setLoading(false)
     }
@@ -35,12 +35,12 @@ export default function Login() {
         <div className="text-center mb-8">
           <img src="/logo-hpcons.png" alt="HP Cons" className="h-16 w-auto object-contain mx-auto mb-3" />
           <h1 className="text-2xl font-bold text-gray-800">HPCons AppTong</h1>
-          <p className="text-gray-400 text-sm mt-1">He thong quan ly kho v2.0</p>
+          <p className="text-gray-400 text-sm mt-1">Hệ thống quản lý kho v2.0</p>
         </div>
 
         {/* Card */}
         <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-8">
-          <h2 className="text-lg font-bold text-gray-800 mb-6">Dang nhap</h2>
+          <h2 className="text-lg font-bold text-gray-800 mb-6">Đăng nhập</h2>
 
           <form onSubmit={handleSubmit} className="space-y-4" autoComplete="on">
             {/* Email */}
@@ -61,7 +61,7 @@ export default function Login() {
 
             {/* Mat khau */}
             <div>
-              <label className="text-xs font-medium text-gray-500 mb-1.5 block">Mat khau</label>
+              <label className="text-xs font-medium text-gray-500 mb-1.5 block">Mật khẩu</label>
               <div className="relative">
                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                 <input
@@ -93,8 +93,8 @@ export default function Login() {
               className="w-full py-2.5 bg-blue-500 hover:bg-blue-600 text-white rounded-xl font-semibold text-sm transition-colors disabled:opacity-50 flex items-center justify-center gap-2 mt-2"
             >
               {loading
-                ? <><Loader className="w-4 h-4 animate-spin" /> Dang dang nhap...</>
-                : 'Dang nhap'
+                ? <><Loader className="w-4 h-4 animate-spin" /> Đang đăng nhập...</>
+                : 'Đăng nhập'
               }
             </button>
           </form>

@@ -5,7 +5,7 @@ import { docPhieu, createPhieu } from '../../api'
 
 function formatVND(n) {
   const num = n ?? 0
-  if (num >= 1_000_000_000) return (num / 1_000_000_000).toFixed(1) + ' ty'
+  if (num >= 1_000_000_000) return (num / 1_000_000_000).toFixed(1) + ' tỷ'
   if (num >= 1_000_000) return (num / 1_000_000).toFixed(0) + ' tr'
   return num.toLocaleString('vi-VN')
 }
@@ -64,7 +64,7 @@ export default function CTAIReader() {
         thanh_tien: it.thanh_tien || (it.so_luong * it.don_gia) || 0,
       })))
     } catch (e) {
-      setError(e.response?.data?.detail || 'Co loi khi doc phieu. Thu lai sau.')
+      setError(e.response?.data?.detail || 'Có lỗi khi đọc phiếu. Thử lại sau.')
     } finally {
       setLoading(false)
     }
@@ -84,9 +84,9 @@ export default function CTAIReader() {
   const tongTien = items.reduce((s, it) => s + (parseFloat(it.thanh_tien) || 0), 0)
 
   const handleSave = async () => {
-    if (!soPhieu) { setSaveMsg({ type: 'err', text: 'Vui long nhap so phieu' }); return }
+    if (!soPhieu) { setSaveMsg({ type: 'err', text: 'Vui lòng nhập số phiếu' }); return }
     const validItems = items.filter(it => it.ten_hang && parseFloat(it.so_luong) > 0)
-    if (validItems.length === 0) { setSaveMsg({ type: 'err', text: 'Can it nhat 1 dong hang' }); return }
+    if (validItems.length === 0) { setSaveMsg({ type: 'err', text: 'Cần ít nhất 1 dòng hàng' }); return }
     setSaving(true); setSaveMsg(null)
     try {
       await createPhieu({
@@ -104,11 +104,11 @@ export default function CTAIReader() {
           thanh_tien: parseFloat(it.thanh_tien) || 0,
         }))
       })
-      setSaveMsg({ type: 'ok', text: `Da luu phieu ${loai} thanh cong!` })
+      setSaveMsg({ type: 'ok', text: `Đã lưu phiếu ${loai} thành công!` })
       setFile(null); setResult(null)
       setSoPhieu(''); setNgay(today()); setDoiTac(''); setItems([])
     } catch (e) {
-      setSaveMsg({ type: 'err', text: e.response?.data?.detail || 'Loi khi luu phieu' })
+      setSaveMsg({ type: 'err', text: e.response?.data?.detail || 'Lỗi khi lưu phiếu' })
     } finally {
       setSaving(false)
     }
@@ -117,23 +117,23 @@ export default function CTAIReader() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-gray-800">AI DOC PDF</h1>
-        <p className="text-gray-500 mt-1 text-sm">Upload PDF hoac anh phieu kho, AI tu dong doc va dien vao form</p>
+        <h1 className="text-2xl font-bold text-gray-800">AI ĐỌC PDF</h1>
+        <p className="text-gray-500 mt-1 text-sm">Upload PDF hoặc ảnh phiếu kho, AI tự động đọc và điền vào form</p>
       </div>
 
       {/* Upload + loai */}
       <div className="bg-white rounded-xl border border-gray-100 p-5">
         <div className="flex gap-4 mb-4">
           <div>
-            <label className="text-xs text-gray-500 font-medium block mb-1">Loai phieu</label>
+            <label className="text-xs text-gray-500 font-medium block mb-1">Loại phiếu</label>
             <div className="flex gap-2">
               <button onClick={() => setLoai('NK')}
                 className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${loai === 'NK' ? 'bg-green-500 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}>
-                Nhap kho (NK)
+                Nhập kho (NK)
               </button>
               <button onClick={() => setLoai('XK')}
                 className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${loai === 'XK' ? 'bg-orange-500 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}>
-                Xuat kho (XK)
+                Xuất kho (XK)
               </button>
             </div>
           </div>
@@ -146,8 +146,8 @@ export default function CTAIReader() {
           onDragOver={e => e.preventDefault()}
         >
           <Upload className="w-10 h-10 text-gray-300 mx-auto mb-2" />
-          <p className="text-gray-600 font-medium text-sm">Click hoac keo tha file vao day</p>
-          <p className="text-gray-400 text-xs mt-1">Ho tro: JPG, PNG, PDF</p>
+          <p className="text-gray-600 font-medium text-sm">Click hoặc kéo thả file vào đây</p>
+          <p className="text-gray-400 text-xs mt-1">Hỗ trợ: JPG, PNG, PDF</p>
           <input ref={fileRef} type="file" className="hidden" accept=".jpg,.jpeg,.png,.pdf" onChange={handleFile} />
         </div>
 
@@ -168,11 +168,11 @@ export default function CTAIReader() {
           className="mt-4 w-full py-2.5 bg-teal-500 text-white rounded-xl font-medium text-sm hover:bg-teal-600 disabled:opacity-50 flex items-center justify-center gap-2 transition-colors"
         >
           {loading
-            ? <><Loader className="w-4 h-4 animate-spin" /> AI dang doc phieu...</>
-            : 'Doc phieu bang AI'
+            ? <><Loader className="w-4 h-4 animate-spin" /> AI đang đọc phiếu...</>
+            : 'Đọc phiếu bằng AI'
           }
         </button>
-        {loading && <p className="text-xs text-gray-400 text-center mt-2">Qua trinh nay mat 10-60 giay</p>}
+        {loading && <p className="text-xs text-gray-400 text-center mt-2">Quá trình này mất 10-60 giây</p>}
       </div>
 
       {error && (
@@ -187,23 +187,23 @@ export default function CTAIReader() {
         <div className="bg-white rounded-xl border border-gray-100 p-5 space-y-4">
           <div className="flex items-center gap-2 text-teal-600">
             <CheckCircle className="w-5 h-5" />
-            <span className="font-semibold">AI doc xong — kiem tra va xac nhan truoc khi luu</span>
+            <span className="font-semibold">AI đọc xong — kiểm tra và xác nhận trước khi lưu</span>
           </div>
 
           {/* Header phieu */}
           <div className="grid grid-cols-3 gap-3">
             <div>
-              <label className="text-xs text-gray-500 font-medium">So phieu</label>
+              <label className="text-xs text-gray-500 font-medium">Số phiếu</label>
               <input value={soPhieu} onChange={e => setSoPhieu(e.target.value)}
                 className="mt-1 w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-teal-400" />
             </div>
             <div>
-              <label className="text-xs text-gray-500 font-medium">Ngay</label>
+              <label className="text-xs text-gray-500 font-medium">Ngày</label>
               <input type="date" value={ngay} onChange={e => setNgay(e.target.value)}
                 className="mt-1 w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-teal-400" />
             </div>
             <div>
-              <label className="text-xs text-gray-500 font-medium">{loai === 'NK' ? 'NCC' : 'Nguoi nhan'}</label>
+              <label className="text-xs text-gray-500 font-medium">{loai === 'NK' ? 'NCC' : 'Người nhận'}</label>
               <input value={doiTac} onChange={e => setDoiTac(e.target.value)}
                 className="mt-1 w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-teal-400" />
             </div>
@@ -215,11 +215,11 @@ export default function CTAIReader() {
               <thead className="bg-gray-50">
                 <tr>
                   <th className="text-left px-3 py-2 text-gray-500 font-medium w-8">#</th>
-                  <th className="text-left px-3 py-2 text-gray-500 font-medium">Ten hang</th>
+                  <th className="text-left px-3 py-2 text-gray-500 font-medium">Tên hàng</th>
                   <th className="text-left px-3 py-2 text-gray-500 font-medium w-20">DVT</th>
                   <th className="text-right px-3 py-2 text-gray-500 font-medium w-24">SL</th>
-                  <th className="text-right px-3 py-2 text-gray-500 font-medium w-28">Don gia</th>
-                  <th className="text-right px-3 py-2 text-gray-500 font-medium w-28">Thanh tien</th>
+                  <th className="text-right px-3 py-2 text-gray-500 font-medium w-28">Đơn giá</th>
+                  <th className="text-right px-3 py-2 text-gray-500 font-medium w-28">Thành tiền</th>
                   <th className="w-8"></th>
                 </tr>
               </thead>
@@ -259,9 +259,9 @@ export default function CTAIReader() {
             <div className="px-3 py-2 border-t border-gray-100 flex justify-between items-center bg-gray-50">
               <button onClick={() => setItems([...items, { ten_hang: '', dvt: 'cai', so_luong: 0, don_gia: 0, thanh_tien: 0 }])}
                 className="text-xs text-teal-600 hover:underline flex items-center gap-1">
-                <Plus className="w-3 h-3" /> Them dong
+                <Plus className="w-3 h-3" /> Thêm dòng
               </button>
-              <span className="text-sm font-bold text-gray-700">Tong: {formatVND(tongTien)}</span>
+              <span className="text-sm font-bold text-gray-700">Tổng: {formatVND(tongTien)}</span>
             </div>
           </div>
 
@@ -274,13 +274,13 @@ export default function CTAIReader() {
           <div className="flex justify-end gap-3">
             <button onClick={() => { setResult(null); setFile(null) }}
               className="px-5 py-2 border border-gray-200 rounded-lg text-sm text-gray-600 hover:bg-gray-50">
-              Huy
+              Hủy
             </button>
             <button onClick={handleSave} disabled={saving}
               className={`px-6 py-2 text-white rounded-lg text-sm font-medium disabled:opacity-50 flex items-center gap-2 ${loai === 'NK' ? 'bg-green-500 hover:bg-green-600' : 'bg-orange-500 hover:bg-orange-600'}`}>
               {saving
-                ? <><RefreshCw className="w-4 h-4 animate-spin" /> Dang luu...</>
-                : <><Save className="w-4 h-4" /> Luu Phieu {loai}</>
+                ? <><RefreshCw className="w-4 h-4 animate-spin" /> Đang lưu...</>
+                : <><Save className="w-4 h-4" /> Lưu Phiếu {loai}</>
               }
             </button>
           </div>
