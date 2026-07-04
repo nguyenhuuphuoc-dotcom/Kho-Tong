@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { useOutletContext, useParams } from 'react-router-dom'
-import { Plus, Search, RefreshCw, Trash2, Package, X } from 'lucide-react'
-import { getHangHoa, createHangHoa, deleteHangHoa } from '../../api'
+import { Plus, Search, RefreshCw, Trash2, Package, X, Pencil } from 'lucide-react'
+import { getHangHoa, createHangHoa, deleteHangHoa, updateHangHoa } from '../../api'
 
 export default function CTDanhMuc() {
   const { ctId } = useOutletContext() || {}
@@ -15,6 +15,12 @@ export default function CTDanhMuc() {
   const [saving, setSaving]   = useState(false)
   const [msg, setMsg]         = useState(null)
   const [form, setForm]       = useState({ ten_hang: '', dvt: 'cai', nhom: 'Vat tu', mo_ta: '' })
+
+  // Edit state
+  const [editItem, setEditItem]   = useState(null) // item đang edit
+  const [editForm, setEditForm]   = useState({ ten_hang: '', dvt: '', nhom: '' })
+  const [editSaving, setEditSaving] = useState(false)
+  const [editMsg, setEditMsg]     = useState(null)
 
   const loadData = () => {
     setLoading(true)
@@ -53,6 +59,25 @@ export default function CTDanhMuc() {
     } catch (e) {
       alert('Loi xoa: ' + (e.response?.data?.detail || e.message))
     }
+  }
+
+  const openEdit = (h) => {
+    setEditItem(h)
+    setEditForm({ ten_hang: h.ten_hang || '', dvt: h.dvt || '', nhom: h.nhom || 'Vat tu' })
+    setEditMsg(null)
+  }
+
+  const handleEditSave = async () => {
+    if (!editForm.ten_hang.trim()) { setEditMsg({ err: true, text: 'Nhap ten hang hoa' }); return }
+    setEditSaving(true); setEditMsg(null)
+    try {
+      await updateHangHoa(editItem.ma_hang, editForm)
+      setList(l => l.map(h => h.ma_hang === editItem.ma_hang ? { ...h, ...editForm } : h))
+      setEditMsg({ err: false, text: 'Da cap nhat!' })
+      setTimeout(() => { setEditItem(null); setEditMsg(null) }, 800)
+    } catch (e) {
+      setEditMsg({ err: true, text: e.response?.data?.detail || 'Loi cap nhat' })
+    } finally { setEditSaving(false) }
   }
 
   return (
@@ -192,10 +217,16 @@ export default function CTDanhMuc() {
                     <span className="text-xs bg-teal-50 text-teal-600 px-2 py-0.5 rounded-full">{h.nhom || 'Vat tu'}</span>
                   </td>
                   <td className="px-2 py-3">
-                    <button onClick={() => handleDelete(h.ma_hang)}
-                      className="p-1.5 text-gray-300 hover:text-red-400 hover:bg-red-50 rounded-lg transition-colors">
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </button>
+                    <div className="flex gap-1">
+                      <button onClick={() => openEdit(h)}
+                        className="p-1.5 text-gray-300 hover:text-teal-500 hover:bg-teal-50 rounded-lg transition-colors">
+                        <Pencil className="w-3.5 h-3.5" />
+                      </button>
+                      <button onClick={() => handleDelete(h.ma_hang)}
+                        className="p-1.5 text-gray-300 hover:text-red-400 hover:bg-red-50 rounded-lg transition-colors">
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -206,6 +237,77 @@ export default function CTDanhMuc() {
 
       {filtered.length > 0 && (
         <p className="text-xs text-gray-400 text-center">{filtered.length} hang hoa</p>
+      )}
+
+      {/* Modal sửa */}
+      {editItem && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4"
+          onClick={e => { if (e.target === e.currentTarget) setEditItem(null) }}>
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-md">
+            <div className="flex items-center justify-between p-5 border-b">
+              <div>
+                <h3 className="font-semibold text-gray-800">Sua hang hoa</h3>
+                <p className="text-xs text-gray-400 font-mono mt-0.5">{editItem.ma_hang}</p>
+              </div>
+              <button onClick={() => setEditItem(null)} className="p-1 hover:bg-gray-100 rounded-lg">
+                <X className="w-4 h-4 text-gray-400" />
+              </button>
+            </div>
+            <div className="p-5 space-y-3">
+              <div>
+                <label className="text-xs text-gray-500 mb-1 block">Ten hang hoa *</label>
+                <input
+                  value={editForm.ten_hang}
+                  onChange={e => setEditForm(f => ({...f, ten_hang: e.target.value}))}
+                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-teal-400"
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-xs text-gray-500 mb-1 block">Don vi tinh</label>
+                  <input
+                    value={editForm.dvt}
+                    onChange={e => setEditForm(f => ({...f, dvt: e.target.value}))}
+                    placeholder="cai, kg, m..."
+                    className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-teal-400"
+                  />
+                </div>
+                <div>
+                  <label className="text-xs text-gray-500 mb-1 block">Nhom</label>
+                  <select
+                    value={editForm.nhom}
+                    onChange={e => setEditForm(f => ({...f, nhom: e.target.value}))}
+                    className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-teal-400"
+                  >
+                    <option>Vat tu</option>
+                    <option>Thiet bi</option>
+                    <option>MM-CCDC</option>
+                    <option>VPP</option>
+                    <option>Khac</option>
+                  </select>
+                </div>
+              </div>
+
+              {editMsg && (
+                <div className={`text-sm px-3 py-2 rounded-lg ${editMsg.err ? 'bg-red-50 text-red-600' : 'bg-green-50 text-green-700'}`}>
+                  {editMsg.err ? '✗' : '✓'} {editMsg.text}
+                </div>
+              )}
+
+              <div className="flex gap-2 pt-1">
+                <button onClick={() => setEditItem(null)}
+                  className="flex-1 py-2 border border-gray-200 text-gray-600 rounded-lg text-sm hover:bg-gray-50">
+                  Huy
+                </button>
+                <button onClick={handleEditSave} disabled={editSaving}
+                  className="flex-1 py-2 bg-teal-500 text-white rounded-lg text-sm font-medium hover:bg-teal-600 disabled:opacity-50 flex items-center justify-center gap-2">
+                  {editSaving ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Pencil className="w-4 h-4" />}
+                  Luu thay doi
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   )

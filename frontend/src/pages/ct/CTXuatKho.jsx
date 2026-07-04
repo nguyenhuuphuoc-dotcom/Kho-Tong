@@ -45,7 +45,7 @@ export default function CTXuatKho() {
 
   useEffect(() => {
     loadData()
-    getHangHoa({ cong_trinh_id: realId, limit: 2000 })
+    getHangHoa({ limit: 2000 })
       .then(res => setHangHoaList(res.data?.data || []))
       .catch(() => {})
   }, [realId])
@@ -323,7 +323,7 @@ export default function CTXuatKho() {
                             className="w-full border border-gray-200 rounded px-2 py-1 text-xs focus:outline-none focus:border-orange-300"
                           />
                           <datalist id={`hang-list-xk-${i}`}>
-                            {hangHoaList.slice(0, 100).map(h => <option key={h.ma_hang} value={h.ten_hang} />)}
+                            {hangHoaList.map(h => <option key={h.ma_hang} value={h.ten_hang} />)}
                           </datalist>
                         </td>
                         <td className="px-3 py-1.5">
@@ -384,3 +384,4 @@ export default function CTXuatKho() {
     </div>
   )
 }
+                                     

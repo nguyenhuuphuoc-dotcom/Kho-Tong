@@ -41,9 +41,16 @@ export default function PhieuNhap() {
   const [form, setForm] = useState({ so_phieu: '', ngay: todayStr(), doi_tac: '', ghi_chu: '' })
   const [items, setItems] = useState([emptyItem()])
 
-  // Danh muc hang hoa cho autocomplete
+  // Danh muc hang hoa cho autocomplete — load san truoc khi mo modal
   const [hangHoaList, setHangHoaList] = useState([])
-  const [activeDropdown, setActiveDropdown] = useState(null) // index dong dang mo dropdown
+  const [activeDropdown, setActiveDropdown] = useState(null)
+
+  useEffect(() => {
+    if (ctLoading) return
+    getHangHoa({ limit: 2000 })
+      .then(res => setHangHoaList(res.data?.data || []))
+      .catch(() => {})
+  }, [ctLoading])
 
   // AI mode
   const [createMode, setCreateMode] = useState('manual') // 'manual' | 'ai'
@@ -95,12 +102,7 @@ export default function PhieuNhap() {
     setAiFile(null)
     setAiError('')
     setActiveDropdown(null)
-    // Load danh muc hang hoa de autocomplete
-    if (selectedCT) {
-      getHangHoa({ cong_trinh_id: selectedCT.id, limit: 2000 })
-        .then(res => setHangHoaList(res.data?.data || []))
-        .catch(() => setHangHoaList([]))
-    }
+    // hangHoaList da duoc load san boi useEffect phia tren
     setShowCreate(true)
   }
 
