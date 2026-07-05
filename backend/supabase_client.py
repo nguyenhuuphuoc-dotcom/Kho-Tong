@@ -226,6 +226,80 @@ def get_ton_kho_by_ct(cong_trinh_id: int = None, ma_ct: str = None) -> list:
     return get_ton_kho_all()
 
 
+def compute_ton_kho(cong_trinh_id: int = None) -> list:
+    """
+    Tính tồn kho trực tiếp từ phieu + chi_tiet_phieu, KHÔNG phụ thuộc v_ton_kho view.
+    Giải quyết vấn đề view chỉ hiện hàng có trong hang_hoa.
+    """
+    phieu_list = get_phieu_list(cong_trinh_id=cong_trinh_id, limit=10000)
+    if not phieu_list:
+        return []
+
+    phieu_map = {p["id"]: p for p in phieu_list}
+    phieu_ids = list(phieu_map.keys())
+
+    # Lấy chi tiết theo batch 100 IDs
+    chi_tiets: list = []
+    for i in range(0, len(phieu_ids), 100):
+        chunk = phieu_ids[i:i + 100]
+        ids_str = ",".join(str(x) for x in chunk)
+        rows = select("chi_tiet_phieu",
+                      query="phieu_id,ten_hang,dvt,so_luong",
+                      filters=f"phieu_id=in.({ids_str})")
+        chi_tiets.extend(rows)
+
+    if not chi_tiets:
+        return []
+
+    # Map CT để lấy ma_ct
+    ct_list = get_all_cong_trinh()
+    ct_map = {ct["id"]: ct for ct in ct_list}
+
+    # Group theo (ten_hang, cong_trinh_id)
+    groups: dict = {}
+    for row in chi_tiets:
+        pid = row.get("phieu_id")
+        p = phieu_map.get(pid, {})
+        ct_id = p.get("cong_trinh_id")
+        if not ct_id:
+            continue
+        ten_hang = (row.get("ten_hang") or "").strip()
+        if not ten_hang:
+            continue
+        key = (ten_hang, ct_id)
+        if key not in groups:
+            ct_info = ct_map.get(ct_id, {})
+            groups[key] = {
+                "ten_hang": ten_hang,
+                "dvt": row.get("dvt") or "",
+                "nhom": "",
+                "cong_trinh_id": ct_id,
+                "ma_ct": ct_info.get("ma_ct", ""),
+                "tong_nhap": 0.0,
+                "tong_xuat": 0.0,
+            }
+        loai = p.get("loai", "")
+        sl = float(row.get("so_luong") or 0)
+        if loai == "NK":
+            groups[key]["tong_nhap"] += sl
+        elif loai == "XK":
+            groups[key]["tong_xuat"] += sl
+
+    result = []
+    for item in groups.values():
+        item["ton_cuoi"] = item["tong_nhap"] - item["tong_xuat"]
+        result.append(item)
+
+    result.sort(key=lambda x: (x.get("nhom", ""), x.get("ten_hang", "")))
+    return result
+
+
+def update_phieu(phieu_id: int, data: dict) -> Optional[dict]:
+    """Cập nhật header phiếu (ngay, doi_tac, ghi_chu, tong_tien)."""
+    rows = update("phieu", data, filters=f"id=eq.{phieu_id}")
+    return rows[0] if rows else None
+
+
 def get_phieu_ids_by_ct(cong_trinh_id: int) -> list:
     """Lấy toàn bộ id phiếu của 1 công trình (có phân trang)."""
     ids, offset = [], 0

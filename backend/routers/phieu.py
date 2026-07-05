@@ -125,6 +125,90 @@ def create_phieu(body: PhieuCreate):
         raise HTTPException(status_code=500, detail=f"Lỗi tạo phiếu: {str(e)}")
 
 
+class PhieuUpdate(BaseModel):
+    ngay: str
+    doi_tac: Optional[str] = ""
+    ghi_chu: Optional[str] = ""
+    tong_tien: Optional[float] = 0
+    items: Optional[List[PhieuItem]] = []
+    user_email: Optional[str] = ""
+    loai: Optional[str] = "NK"
+    so_phieu: Optional[str] = ""
+    cong_trinh_id: Optional[int] = None
+
+
+@router.get("/lich-su")
+def get_lich_su_giao_dich(
+    cong_trinh_id: Optional[int] = Query(None),
+    loai: Optional[str] = Query(None, description="NK hoặc XK"),
+    ten_hang: Optional[str] = Query(None, description="Tìm theo tên hàng"),
+    date_from: Optional[str] = Query(None),
+    date_to: Optional[str] = Query(None),
+    limit: int = Query(500, ge=1, le=5000),
+    offset: int = Query(0, ge=0),
+):
+    """Lịch sử giao dịch chi tiết — toàn bộ nhập/xuất theo thời gian."""
+    try:
+        phieu_list = db.get_phieu_list(
+            cong_trinh_id=cong_trinh_id,
+            loai=loai,
+            date_from=date_from,
+            date_to=date_to,
+            limit=10000,
+        )
+        lich_su = db.get_lich_su(phieu_list, limit=50000)
+        if ten_hang:
+            lich_su = [r for r in lich_su if ten_hang.lower() in r.get("ten_hang", "").lower()]
+        lich_su.sort(key=lambda x: x.get("ngay", ""), reverse=True)
+        total = len(lich_su)
+        return {"data": lich_su[offset: offset + limit], "total": total}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Lỗi lấy lịch sử: {str(e)}")
+
+
+@router.put("/{id}")
+def update_phieu(id: int, body: PhieuUpdate):
+    """Cập nhật phiếu + chi tiết hàng hóa."""
+    try:
+        tong_tien = body.tong_tien or 0
+        if not tong_tien and body.items:
+            tong_tien = sum(
+                (it.thanh_tien or it.so_luong * it.don_gia)
+                for it in body.items
+            )
+
+        db.update_phieu(id, {
+            "ngay": body.ngay,
+            "doi_tac": body.doi_tac or "",
+            "ghi_chu": body.ghi_chu or "",
+            "tong_tien": tong_tien,
+        })
+
+        # Xóa chi tiết cũ, thêm mới
+        db.delete("chi_tiet_phieu", filters=f"phieu_id=eq.{id}")
+        if body.items:
+            items_data = [it.model_dump() for it in body.items]
+            for it in items_data:
+                if not it.get("thanh_tien"):
+                    it["thanh_tien"] = it["so_luong"] * it["don_gia"]
+            db.push_chi_tiet(id, items_data)
+
+        db.log_activity(
+            action=f"update_{(body.loai or 'nk').lower()}",
+            entity_type="phieu",
+            entity_id=str(id),
+            details=f"Cập nhật {body.loai or 'NK'} {body.so_phieu or ''} | {body.ngay} | {body.doi_tac or ''} | {tong_tien:,.0f} VND",
+            user_email=body.user_email or "",
+            cong_trinh_id=body.cong_trinh_id,
+        )
+
+        return {"success": True, "phieu_id": id}
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Lỗi cập nhật phiếu: {str(e)}")
+
+
 @router.delete("/{id}")
 def delete_phieu(id: int, user_email: Optional[str] = Query(None)):
     """Xóa phiếu và toàn bộ chi tiết phiếu."""

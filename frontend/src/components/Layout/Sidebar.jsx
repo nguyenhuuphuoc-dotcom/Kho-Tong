@@ -6,7 +6,7 @@ import {
   Download, Upload, Package, Box, Building2,
   Users, Shield, ChevronLeft, ChevronRight,
   Database, CheckCircle,
-  ChevronDown, ChevronUp, Layers, FileUp, ClipboardList
+  ChevronDown, ChevronUp, Layers, FileUp, ClipboardList, History
 } from 'lucide-react'
 import { useCongTrinh } from '../../context/CongTrinhContext'
 import { useAuth } from '../../context/AuthContext'
@@ -29,6 +29,7 @@ const groupQuanLy = {
     { icon: Package,   label: 'Tồn kho',           path: '/ton-kho' },
     { icon: Box,       label: 'Danh mục hàng hóa', path: '/danh-muc' },
     { icon: BarChart2,     label: 'Báo cáo',        path: '/bao-cao' },
+    { icon: History,       label: 'Lịch sử GD',    path: '/lich-su' },
     { icon: ClipboardList, label: 'Nhật ký HĐ',   path: '/nhat-ky', adminOnly: true },
   ]
 }

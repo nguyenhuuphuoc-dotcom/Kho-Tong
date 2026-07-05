@@ -38,14 +38,14 @@ def get_ton_kho(
     cong_trinh_id: Optional[int] = Query(None, description="Lọc theo id công trình"),
     ma_ct: Optional[str] = Query(None, description="Lọc theo mã công trình"),
 ):
-    """Lấy tồn kho. Nếu không có filter → trả về tất cả công trình."""
+    """Lấy tồn kho tính trực tiếp từ phiếu NK/XK (không dùng view)."""
     try:
-        if cong_trinh_id:
-            rows = db.get_ton_kho_by_ct(cong_trinh_id=cong_trinh_id)
-        elif ma_ct:
-            rows = db.get_ton_kho_by_ct(ma_ct=ma_ct)
-        else:
-            rows = db.get_ton_kho_all()
+        # Resolve ma_ct → cong_trinh_id nếu cần
+        if ma_ct and not cong_trinh_id:
+            ct = db.get_cong_trinh_by_ma(ma_ct)
+            if ct:
+                cong_trinh_id = ct["id"]
+        rows = db.compute_ton_kho(cong_trinh_id=cong_trinh_id)
         return {"data": rows, "total": len(rows)}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Lỗi lấy tồn kho: {str(e)}")

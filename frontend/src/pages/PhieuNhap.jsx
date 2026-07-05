@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react'
-import { Download, Search, RefreshCw, Eye, X, Plus, Trash2, Bot, Loader, FileText, FileDown } from 'lucide-react'
+import { Download, Search, RefreshCw, Eye, X, Plus, Trash2, Pencil, Bot, Loader, FileText, FileDown, AlertTriangle } from 'lucide-react'
 import HangHoaInput from '../components/HangHoaInput'
-import { getPhieuList, getChiTietPhieu, createPhieu, docPhieu, getHangHoa } from '../api'
+import { getPhieuList, getChiTietPhieu, createPhieu, updatePhieu, deletePhieu, docPhieu, getHangHoa } from '../api'
 import { useCongTrinh } from '../context/CongTrinhContext'
 import { useAuth } from '../context/AuthContext'
 import { exportPhieuList } from '../utils/exportExcel'
@@ -37,12 +37,18 @@ export default function PhieuNhap() {
   const [loadingChiTiet, setLoadingChiTiet] = useState(false)
   const [exporting, setExporting] = useState(false)
 
-  // Create modal
+  // Create / Edit modal
   const [showCreate, setShowCreate] = useState(false)
+  const [editingPhieu, setEditingPhieu] = useState(null)  // null = create, object = edit
+  const [loadingEdit, setLoadingEdit] = useState(false)
   const [creating, setCreating] = useState(false)
   const [createError, setCreateError] = useState('')
   const [form, setForm] = useState({ so_phieu: '', ngay: todayStr(), doi_tac: '', ghi_chu: '' })
   const [items, setItems] = useState([emptyItem()])
+
+  // Delete confirm
+  const [confirmDelete, setConfirmDelete] = useState(null) // phieu object
+  const [deleting, setDeleting] = useState(false)
 
   // Danh muc hang hoa cho autocomplete — load san truoc khi mo modal
   const [hangHoaList, setHangHoaList] = useState([])
@@ -109,6 +115,72 @@ export default function PhieuNhap() {
     // Retry nếu hangHoaList chưa load (Render cold start hoặc lỗi mạng)
     if (hangHoaList.length === 0) loadHangHoa()
     setShowCreate(true)
+  }
+
+  const openEdit = async (phieu) => {
+    setLoadingEdit(true)
+    try {
+      const res = await getChiTietPhieu(phieu.id)
+      const ct = res.data?.items || []
+      setForm({ so_phieu: phieu.so_phieu, ngay: phieu.ngay, doi_tac: phieu.doi_tac || '', ghi_chu: phieu.ghi_chu || '' })
+      setItems(ct.length > 0 ? ct.map(i => ({ ...i, selected: true })) : [emptyItem()])
+      setEditingPhieu(phieu)
+      setCreateError('')
+      setCreateMode('manual')
+      if (hangHoaList.length === 0) loadHangHoa()
+      setShowCreate(true)
+    } catch {
+      alert('Không tải được chi tiết phiếu')
+    } finally {
+      setLoadingEdit(false)
+    }
+  }
+
+  const handleUpdate = async () => {
+    if (!form.so_phieu.trim()) { setCreateError('Nhập số phiếu'); return }
+    const validItems = items.filter(it => it.ten_hang.trim())
+    if (validItems.length === 0) { setCreateError('Thêm ít nhất 1 hàng hóa'); return }
+    setCreating(true)
+    setCreateError('')
+    try {
+      await updatePhieu(editingPhieu.id, {
+        loai: 'NK',
+        so_phieu: form.so_phieu.trim(),
+        ngay: form.ngay,
+        doi_tac: form.doi_tac.trim(),
+        ghi_chu: form.ghi_chu.trim(),
+        tong_tien: tongItems,
+        cong_trinh_id: editingPhieu.cong_trinh_id,
+        user_email: user?.email || '',
+        items: validItems.map(it => ({
+          ...it,
+          so_luong: parseFloat(it.so_luong) || 0,
+          don_gia:  parseFloat(it.don_gia)  || 0,
+          thanh_tien: it.thanh_tien || 0,
+        }))
+      })
+      setShowCreate(false)
+      setEditingPhieu(null)
+      loadData()
+    } catch (e) {
+      setCreateError(e.response?.data?.detail || 'Lỗi cập nhật phiếu. Thử lại.')
+    } finally {
+      setCreating(false)
+    }
+  }
+
+  const handleDelete = async () => {
+    if (!confirmDelete) return
+    setDeleting(true)
+    try {
+      await deletePhieu(confirmDelete.id, user?.email || '')
+      setConfirmDelete(null)
+      loadData()
+    } catch {
+      alert('Lỗi xóa phiếu. Thử lại.')
+    } finally {
+      setDeleting(false)
+    }
   }
 
   const updateItem = (idx, field, val) => {
@@ -316,10 +388,18 @@ export default function PhieuNhap() {
                         )}
                         <td className="px-4 py-3 text-gray-600 text-xs truncate max-w-[130px]">{p.doi_tac || '—'}</td>
                         <td className="px-4 py-3 text-right font-semibold text-blue-700">{formatVND(p.tong_tien)}</td>
-                        <td className="px-4 py-3 text-center">
-                          <button onClick={() => openChiTiet(p)}
+                        <td className="px-4 py-3 text-center whitespace-nowrap">
+                          <button onClick={() => openChiTiet(p)} title="Xem chi tiết"
                             className="p-1.5 hover:bg-blue-50 text-gray-400 hover:text-blue-600 rounded-lg transition-colors">
                             <Eye className="w-4 h-4" />
+                          </button>
+                          <button onClick={() => openEdit(p)} disabled={loadingEdit} title="Sửa phiếu"
+                            className="p-1.5 hover:bg-yellow-50 text-gray-400 hover:text-yellow-600 rounded-lg transition-colors disabled:opacity-40">
+                            <Pencil className="w-4 h-4" />
+                          </button>
+                          <button onClick={() => setConfirmDelete(p)} title="Xóa phiếu"
+                            className="p-1.5 hover:bg-red-50 text-gray-400 hover:text-red-500 rounded-lg transition-colors">
+                            <Trash2 className="w-4 h-4" />
                           </button>
                         </td>
                       </tr>
@@ -401,20 +481,20 @@ export default function PhieuNhap() {
           <div className="bg-white rounded-xl shadow-xl w-full max-w-3xl max-h-[90vh] flex flex-col">
             <div className="flex items-center justify-between p-5 border-b">
               <div>
-                <h3 className="font-bold text-gray-800 text-lg">Tạo Phiếu Nhập Kho</h3>
-                <p className="text-sm text-teal-600 font-medium">📌 {selectedCT?.ten_ct}
+                <h3 className="font-bold text-gray-800 text-lg">{editingPhieu ? `Sửa Phiếu NK — ${editingPhieu.so_phieu}` : 'Tạo Phiếu Nhập Kho'}</h3>
+                <p className="text-sm text-teal-600 font-medium">📌 {editingPhieu ? ctMap[editingPhieu.cong_trinh_id] || editingPhieu.so_phieu : selectedCT?.ten_ct}
                   <span className="ml-2 text-xs text-gray-400 font-normal">
                     {hangHoaList.length > 0 ? `${hangHoaList.length} mặt hàng trong danh mục` : '⚠ Danh mục chưa tải'}
                   </span>
                 </p>
               </div>
-              <button onClick={() => setShowCreate(false)} className="p-1 hover:bg-gray-100 rounded-lg text-gray-400">
+              <button onClick={() => { setShowCreate(false); setEditingPhieu(null) }} className="p-1 hover:bg-gray-100 rounded-lg text-gray-400">
                 <X className="w-5 h-5" />
               </button>
             </div>
 
             <div className="overflow-auto flex-1 p-5 space-y-4">
-              <div className="flex gap-1 p-1 bg-gray-100 rounded-lg">
+              {!editingPhieu && <div className="flex gap-1 p-1 bg-gray-100 rounded-lg">
                 <button onClick={() => setCreateMode('manual')}
                   className={"flex-1 py-1.5 px-3 rounded-md text-xs font-medium transition-colors " + (createMode === 'manual' ? 'bg-white text-gray-800 shadow-sm' : 'text-gray-500 hover:text-gray-700')}>
                   Nhập tay
@@ -458,8 +538,9 @@ export default function PhieuNhap() {
                   <p className="text-xs text-gray-400 text-center">AI đọc xong sẽ chuyển sang Nhập tay để kiểm tra</p>
                 </div>
               )}
+              </div>}
 
-              {createMode === 'manual' && (
+              {(createMode === 'manual' || editingPhieu) && (
                 <>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
@@ -544,13 +625,38 @@ export default function PhieuNhap() {
                 {createMode === 'manual' && <p className="text-base font-bold text-blue-700">Tổng: {formatVND(tongItems)}</p>}
               </div>
               <div className="flex gap-2">
-                <button onClick={() => setShowCreate(false)} className="px-4 py-2 border border-gray-200 text-gray-600 rounded-lg text-sm hover:bg-gray-50">Hủy</button>
-                {createMode === 'manual' && (
-                  <button onClick={handleCreate} disabled={creating} className="px-5 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg text-sm font-medium disabled:opacity-50">
-                    {creating ? 'Đang lưu...' : 'Lưu Phiếu NK'}
+                <button onClick={() => { setShowCreate(false); setEditingPhieu(null) }} className="px-4 py-2 border border-gray-200 text-gray-600 rounded-lg text-sm hover:bg-gray-50">Hủy</button>
+                {(createMode === 'manual' || editingPhieu) && (
+                  <button onClick={editingPhieu ? handleUpdate : handleCreate} disabled={creating}
+                    className="px-5 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg text-sm font-medium disabled:opacity-50">
+                    {creating ? 'Đang lưu...' : editingPhieu ? 'Cập nhật' : 'Lưu Phiếu NK'}
                   </button>
                 )}
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* Delete confirm */}
+      {confirmDelete && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-sm p-6">
+            <div className="flex items-start gap-3 mb-4">
+              <AlertTriangle className="w-6 h-6 text-red-500 flex-shrink-0 mt-0.5" />
+              <div>
+                <h3 className="font-bold text-gray-800">Xóa phiếu nhập kho?</h3>
+                <p className="text-sm text-gray-500 mt-1">
+                  Phiếu <b className="text-red-600">{confirmDelete.so_phieu}</b> ngày {confirmDelete.ngay} và toàn bộ chi tiết sẽ bị xóa vĩnh viễn.
+                </p>
+              </div>
+            </div>
+            <div className="flex justify-end gap-2">
+              <button onClick={() => setConfirmDelete(null)} disabled={deleting}
+                className="px-4 py-2 text-sm text-gray-500 hover:bg-gray-100 rounded-lg">Hủy</button>
+              <button onClick={handleDelete} disabled={deleting}
+                className="px-4 py-2 text-sm font-medium text-white bg-red-500 hover:bg-red-600 rounded-lg disabled:opacity-50">
+                {deleting ? 'Đang xóa...' : 'Xóa vĩnh viễn'}
+              </button>
             </div>
           </div>
         </div>

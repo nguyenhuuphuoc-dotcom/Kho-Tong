@@ -23,6 +23,8 @@ export const getPhieuList = (params) => api.get('/phieu/', { params })
 export const getChiTietPhieu = (id) => api.get(`/phieu/${id}/chi-tiet`)
 export const createPhieu = (data) => api.post('/phieu/', data)
 export const deletePhieu = (id, userEmail = '') => api.delete(`/phieu/${id}`, { params: { user_email: userEmail } })
+export const updatePhieu = (id, data) => api.put(`/phieu/${id}`, data)
+export const getLichSuGiaoDich = (params) => api.get('/phieu/lich-su', { params })
 
 // Hang hoa
 export const getHangHoa = (params) => api.get('/hang-hoa/', { params })
