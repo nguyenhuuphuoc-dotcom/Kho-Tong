@@ -12,7 +12,10 @@ function formatVND(n) {
 }
 
 export default function LichSuGiaoDich() {
-  const { selectedCT, ctLoading, congTrinhs, dateFrom, dateTo } = useCongTrinh()
+  const { selectedCT, ctLoading, congTrinhs, dateFrom, dateTo, isAdmin } = useCongTrinh()
+
+  // Non-admin: luôn dùng CT đầu tiên được gán (không cho xem tất cả)
+  const effectiveCT = isAdmin ? selectedCT : (congTrinhs?.[0] || null)
 
   const [data, setData] = useState([])
   const [total, setTotal] = useState(0)
@@ -22,9 +25,11 @@ export default function LichSuGiaoDich() {
 
   const loadData = () => {
     if (ctLoading) return
+    // Non-admin: phải có CT, không load tất cả
+    if (!isAdmin && !effectiveCT) return
     setLoading(true)
     const params = { limit: 2000 }
-    if (selectedCT) params.cong_trinh_id = selectedCT.id
+    if (effectiveCT) params.cong_trinh_id = effectiveCT.id
     if (loaiFilter)  params.loai = loaiFilter
     if (dateFrom)    params.date_from = dateFrom
     if (dateTo)      params.date_to   = dateTo
@@ -37,7 +42,7 @@ export default function LichSuGiaoDich() {
       .finally(() => setLoading(false))
   }
 
-  useEffect(() => { loadData() }, [selectedCT, ctLoading, loaiFilter, dateFrom, dateTo])
+  useEffect(() => { loadData() }, [effectiveCT, ctLoading, loaiFilter, dateFrom, dateTo])
 
   const ctMap = Object.fromEntries((congTrinhs || []).map(ct => [ct.id, ct.ten_ct]))
 
@@ -61,9 +66,11 @@ export default function LichSuGiaoDich() {
         <div>
           <h1 className="text-2xl font-bold text-gray-800">LỊCH SỬ GIAO DỊCH</h1>
           <p className="text-gray-500 mt-1 text-sm">Toàn bộ hàng hóa nhập/xuất theo từng phiếu</p>
-          {selectedCT
-            ? <span className="inline-block mt-1 px-2 py-0.5 bg-teal-100 text-teal-700 text-xs rounded-full">📌 {selectedCT.ten_ct}</span>
-            : <span className="inline-block mt-1 px-2 py-0.5 bg-blue-100 text-blue-700 text-xs rounded-full">🏢 Tất cả CT</span>
+          {effectiveCT
+            ? <span className="inline-block mt-1 px-2 py-0.5 bg-teal-100 text-teal-700 text-xs rounded-full">📌 {effectiveCT.ten_ct}</span>
+            : isAdmin
+              ? <span className="inline-block mt-1 px-2 py-0.5 bg-blue-100 text-blue-700 text-xs rounded-full">🏢 Tất cả CT</span>
+              : <span className="inline-block mt-1 px-2 py-0.5 bg-gray-100 text-gray-500 text-xs rounded-full">Chưa có công trình</span>
           }
         </div>
         <button onClick={loadData} disabled={loading}
