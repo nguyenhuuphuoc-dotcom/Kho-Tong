@@ -27,7 +27,8 @@ export default function TonKho() {
   const filtered = data.filter(r => {
     const matchSearch = !search ||
       (r.ten_hang || '').toLowerCase().includes(search.toLowerCase()) ||
-      (r.nhom || '').toLowerCase().includes(search.toLowerCase())
+      (r.nhom     || '').toLowerCase().includes(search.toLowerCase()) ||
+      (r.ma_hang  || '').toLowerCase().includes(search.toLowerCase())
     const matchCB = !showCanhBao || (r.ton_cuoi ?? 0) <= 0
     return matchSearch && matchCB
   })
@@ -105,6 +106,7 @@ export default function TonKho() {
             <thead className="bg-gray-50 border-b border-gray-100">
               <tr>
                 <th className="text-left px-4 py-3 text-gray-500 font-medium">#</th>
+                <th className="text-left px-3 py-3 text-gray-500 font-medium">Mã hàng</th>
                 <th className="text-left px-4 py-3 text-gray-500 font-medium">Tên hàng hóa</th>
                 <th className="text-left px-4 py-3 text-gray-500 font-medium">Nhóm</th>
                 <th className="text-left px-4 py-3 text-gray-500 font-medium">Công trình</th>
@@ -117,14 +119,15 @@ export default function TonKho() {
             </thead>
             <tbody>
               {loading
-                ? <tr><td colSpan={9} className="py-10 text-center text-gray-400">Đang tải dữ liệu...</td></tr>
+                ? <tr><td colSpan={10} className="py-10 text-center text-gray-400">Đang tải dữ liệu...</td></tr>
                 : filtered.length === 0
-                  ? <tr><td colSpan={9} className="py-10 text-center text-gray-400">Không có dữ liệu tồn kho</td></tr>
+                  ? <tr><td colSpan={10} className="py-10 text-center text-gray-400">Không có dữ liệu tồn kho</td></tr>
                   : filtered.map((r, i) => {
                       const hetHang = (r.ton_cuoi ?? 0) <= 0
                       return (
                         <tr key={i} className={`border-b border-gray-50 hover:bg-gray-50 transition-colors ${hetHang ? 'bg-red-50/40' : ''}`}>
                           <td className="px-4 py-2.5 text-gray-400 text-xs">{i + 1}</td>
+                          <td className="px-3 py-2.5 font-mono text-xs text-blue-600">{r.ma_hang || '—'}</td>
                           <td className="px-4 py-2.5 text-gray-800 font-medium">{r.ten_hang}</td>
                           <td className="px-4 py-2.5 text-gray-500 text-xs">{r.nhom || '—'}</td>
                           <td className="px-4 py-2.5 text-gray-600 text-xs">{r.ma_ct || '—'}</td>

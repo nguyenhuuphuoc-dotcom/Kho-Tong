@@ -20,7 +20,7 @@ const genSoPhieu = () => {
   const ymd = `${d.getFullYear()}${String(d.getMonth()+1).padStart(2,'0')}${String(d.getDate()).padStart(2,'0')}`
   return `NK-${ymd}-${String(Math.floor(Math.random()*900)+100)}`
 }
-const emptyItem = () => ({ ten_hang: '', dvt: 'cái', so_luong: 1, don_gia: 0, thanh_tien: 0, selected: false })
+const emptyItem = () => ({ ma_hang: '', ten_hang: '', dvt: 'cái', so_luong: 1, don_gia: 0, thanh_tien: 0, selected: false })
 
 const normalize = (s) => (s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/đ/g,'d').replace(/Đ/g,'D').toLowerCase()
 
@@ -594,7 +594,7 @@ export default function PhieuNhap() {
                                 <HangHoaInput
                                   value={it.ten_hang}
                                   onChange={(val) => updateItem(i, 'ten_hang', val)}
-                                  onSelect={(hh) => setItems(prev => prev.map((r, j) => j !== i ? r : { ...r, ten_hang: hh.ten_hang, dvt: hh.dvt || r.dvt, selected: true }))}
+                                  onSelect={(hh) => setItems(prev => prev.map((r, j) => j !== i ? r : { ...r, ma_hang: hh.ma_hang || '', ten_hang: hh.ten_hang, dvt: hh.dvt || r.dvt, selected: true }))}
                                   hangHoaList={hangHoaList}
                                   isAdmin={isAdminUser}
                                   theme="blue"

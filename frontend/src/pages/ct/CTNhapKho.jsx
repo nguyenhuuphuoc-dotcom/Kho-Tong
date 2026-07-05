@@ -15,7 +15,7 @@ function formatVND(n) {
 }
 const today = () => new Date().toISOString().slice(0, 10)
 
-const emptyItem = () => ({ ten_hang: '', dvt: 'cái', so_luong: '', don_gia: '', thanh_tien: '', selected: false })
+const emptyItem = () => ({ ma_hang: '', ten_hang: '', dvt: 'cái', so_luong: '', don_gia: '', thanh_tien: '', selected: false })
 const normalize = (s) => (s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/đ/g,'d').replace(/Đ/g,'D').toLowerCase()
 
 export default function CTNhapKho() {
@@ -348,7 +348,7 @@ export default function CTNhapKho() {
                             onChange={(val) => updateItem(i, 'ten_hang', val)}
                             onSelect={(hh) => {
                               const next = [...items]
-                              next[i] = { ...next[i], ten_hang: hh.ten_hang, dvt: hh.dvt || 'cái', selected: true }
+                              next[i] = { ...next[i], ma_hang: hh.ma_hang || '', ten_hang: hh.ten_hang, dvt: hh.dvt || 'cái', selected: true }
                               setItems(next)
                             }}
                             hangHoaList={hangHoaList}

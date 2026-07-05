@@ -12,6 +12,7 @@ router = APIRouter(prefix="/api/phieu", tags=["phieu"])
 
 
 class PhieuItem(BaseModel):
+    ma_hang: Optional[str] = ""
     ten_hang: str
     dvt: Optional[str] = "cái"
     so_luong: Optional[float] = 0

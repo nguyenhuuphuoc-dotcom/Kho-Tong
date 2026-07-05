@@ -156,8 +156,14 @@ def push_chi_tiet(phieu_cloud_id: int, items: list):
              "so_luong": it.get("so_luong", 0),
              "don_gia": it.get("don_gia", 0),
              "thanh_tien": it.get("thanh_tien", 0),
-             "ghi_chu": it.get("ghi_chu", "")} for it in items]
-    insert("chi_tiet_phieu", data)
+             "ghi_chu": it.get("ghi_chu", ""),
+             "ma_hang": it.get("ma_hang", "")} for it in items]
+    try:
+        insert("chi_tiet_phieu", data)
+    except RuntimeError:
+        # Fallback: cột ma_hang chưa tồn tại (trước migration) — bỏ ma_hang
+        data_fallback = [{k: v for k, v in d.items() if k != "ma_hang"} for d in data]
+        insert("chi_tiet_phieu", data_fallback)
 
 
 def delete_phieu(phieu_id: int):
@@ -228,8 +234,9 @@ def get_ton_kho_by_ct(cong_trinh_id: int = None, ma_ct: str = None) -> list:
 
 def compute_ton_kho(cong_trinh_id: int = None) -> list:
     """
-    Tính tồn kho trực tiếp từ phieu + chi_tiet_phieu, KHÔNG phụ thuộc v_ton_kho view.
-    Giải quyết vấn đề view chỉ hiện hàng có trong hang_hoa.
+    Tính tồn kho trực tiếp từ phieu + chi_tiet_phieu.
+    Enrich từ hang_hoa để lấy ma_hang + nhom chính xác.
+    Hỗ trợ cả pre và post migration (cột ma_hang trong chi_tiet_phieu).
     """
     phieu_list = get_phieu_list(cong_trinh_id=cong_trinh_id, limit=10000)
     if not phieu_list:
@@ -238,24 +245,45 @@ def compute_ton_kho(cong_trinh_id: int = None) -> list:
     phieu_map = {p["id"]: p for p in phieu_list}
     phieu_ids = list(phieu_map.keys())
 
+    # Probe một lần: chi_tiet_phieu có cột ma_hang chưa? (post-migration)
+    has_ma_hang_col = False
+    try:
+        select("chi_tiet_phieu", query="ma_hang", filters="limit=1")
+        has_ma_hang_col = True
+    except RuntimeError:
+        pass
+
+    ct_query = "phieu_id,ten_hang,dvt,so_luong" + (",ma_hang" if has_ma_hang_col else "")
+
     # Lấy chi tiết theo batch 100 IDs
     chi_tiets: list = []
     for i in range(0, len(phieu_ids), 100):
         chunk = phieu_ids[i:i + 100]
         ids_str = ",".join(str(x) for x in chunk)
         rows = select("chi_tiet_phieu",
-                      query="phieu_id,ten_hang,dvt,so_luong",
+                      query=ct_query,
                       filters=f"phieu_id=in.({ids_str})")
         chi_tiets.extend(rows)
 
     if not chi_tiets:
         return []
 
-    # Map CT để lấy ma_ct
+    # Map CT → ma_ct
     ct_list = get_all_cong_trinh()
     ct_map = {ct["id"]: ct for ct in ct_list}
 
-    # Group theo (ten_hang, cong_trinh_id)
+    # Load hang_hoa để enrich ma_hang + nhom (lookup by ten_hang + cong_trinh_id)
+    hh_list = get_all_hang_hoa(cong_trinh_id=cong_trinh_id, limit=10000)
+    hh_by_name: dict = {}   # (ten_hang_lower, cong_trinh_id) → hh
+    hh_by_ma:   dict = {}   # (ma_hang, cong_trinh_id)        → hh
+    for hh in hh_list:
+        name_key = ((hh.get("ten_hang") or "").strip().lower(), hh.get("cong_trinh_id"))
+        hh_by_name[name_key] = hh
+        if hh.get("ma_hang"):
+            hh_by_ma[(hh["ma_hang"], hh.get("cong_trinh_id"))] = hh
+
+    # Group theo (group_key, cong_trinh_id)
+    # group_key = ma_hang (ưu tiên) hoặc ten_hang (fallback)
     groups: dict = {}
     for row in chi_tiets:
         pid = row.get("phieu_id")
@@ -264,15 +292,29 @@ def compute_ton_kho(cong_trinh_id: int = None) -> list:
         if not ct_id:
             continue
         ten_hang = (row.get("ten_hang") or "").strip()
-        if not ten_hang:
+        ma_hang_row = (row.get("ma_hang") or "").strip()  # từ chi_tiet (post-migration)
+        if not ten_hang and not ma_hang_row:
             continue
-        key = (ten_hang, ct_id)
+
+        # Lookup hang_hoa: ưu tiên tìm theo ma_hang_row trước, fallback theo ten_hang
+        if ma_hang_row:
+            hh_info = hh_by_ma.get((ma_hang_row, ct_id)) or hh_by_name.get((ten_hang.lower(), ct_id), {})
+        else:
+            hh_info = hh_by_name.get((ten_hang.lower(), ct_id), {})
+
+        # Xác định ma_hang cuối: từ catalog (ưu tiên) hoặc từ chi_tiet
+        ma_hang = hh_info.get("ma_hang", "") or ma_hang_row
+        # Group key thống nhất: dùng ma_hang nếu có, else ten_hang
+        group_key = ma_hang if ma_hang else ten_hang
+        key = (group_key, ct_id)
+
         if key not in groups:
             ct_info = ct_map.get(ct_id, {})
             groups[key] = {
-                "ten_hang": ten_hang,
-                "dvt": row.get("dvt") or "",
-                "nhom": "",
+                "ma_hang": ma_hang,
+                "ten_hang": hh_info.get("ten_hang", ten_hang),
+                "dvt": hh_info.get("dvt", "") or row.get("dvt") or "",
+                "nhom": hh_info.get("nhom", "") or "",
                 "cong_trinh_id": ct_id,
                 "ma_ct": ct_info.get("ma_ct", ""),
                 "tong_nhap": 0.0,
