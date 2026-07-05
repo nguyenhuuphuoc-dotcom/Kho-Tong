@@ -5,8 +5,10 @@
  * - Điều hướng bàn phím: ↑ ↓ Enter Escape
  * - Tự điền DVT khi chọn
  * - Validate: không cho nhập tên ngoài danh mục (trừ admin)
+ * - Dùng React Portal để dropdown không bị clip bởi overflow-hidden
  */
 import React, { useState, useRef, useEffect } from 'react'
+import { createPortal } from 'react-dom'
 
 const normalize = (s) =>
   (s || '')
@@ -36,7 +38,9 @@ export default function HangHoaInput({
   const [open, setOpen]         = useState(false)
   const [highlight, setHL]      = useState(0)
   const [error, setError]       = useState(false)
-  const listRef = useRef()
+  const [dropRect, setDropRect] = useState(null)
+  const inputRef = useRef()
+  const listRef  = useRef()
   const t = THEMES[theme] || THEMES.blue
 
   // Sync khi parent đổi value (ví dụ AI điền form)
@@ -54,6 +58,18 @@ export default function HangHoaInput({
   }
 
   const matches = getMatches(inputVal)
+
+  // Tính vị trí dropdown (fixed so thoát overflow-hidden)
+  const updateDropRect = () => {
+    if (inputRef.current) {
+      const r = inputRef.current.getBoundingClientRect()
+      setDropRect({ top: r.bottom + 2, left: r.left, width: r.width })
+    }
+  }
+
+  useEffect(() => {
+    if (open) updateDropRect()
+  }, [open])
 
   // Cuộn item được highlight vào view
   useEffect(() => {
@@ -76,11 +92,19 @@ export default function HangHoaInput({
     setHL(0)
     setError(false)
     onChange?.(val)
-    setOpen(val.length >= 2)
+    if (val.length >= 2) {
+      updateDropRect()
+      setOpen(true)
+    } else {
+      setOpen(false)
+    }
   }
 
   const handleFocus = () => {
-    if (inputVal.length >= 2) setOpen(true)
+    if (inputVal.length >= 2) {
+      updateDropRect()
+      setOpen(true)
+    }
   }
 
   const handleBlur = () => {
@@ -94,7 +118,6 @@ export default function HangHoaInput({
         setError(true)
       } else {
         setError(false)
-        // Đảm bảo DVT được cập nhật nếu người dùng gõ đúng tên rồi blur
         onSelect?.(match)
       }
     }, 200)
@@ -103,7 +126,7 @@ export default function HangHoaInput({
   const handleKeyDown = (e) => {
     if (e.key === 'ArrowDown') {
       e.preventDefault()
-      if (!open && inputVal.length >= 2) { setOpen(true); return }
+      if (!open && inputVal.length >= 2) { updateDropRect(); setOpen(true); return }
       setHL(h => Math.min(h + 1, matches.length - 1))
     } else if (e.key === 'ArrowUp') {
       e.preventDefault()
@@ -118,9 +141,48 @@ export default function HangHoaInput({
     }
   }
 
+  const dropdownContent = open && dropRect ? (
+    matches.length > 0 ? (
+      <div
+        ref={listRef}
+        style={{ position: 'fixed', top: dropRect.top, left: dropRect.left, width: dropRect.width, zIndex: 99999 }}
+        className="bg-white border border-gray-200 rounded-lg shadow-xl max-h-52 overflow-y-auto"
+      >
+        {matches.map((hh, j) => (
+          <div
+            key={hh.ma_hang || j}
+            data-idx={j}
+            onMouseDown={() => doSelect(hh)}
+            className={`px-3 py-2 cursor-pointer text-xs flex items-center gap-2 border-b border-gray-50 last:border-0 ${
+              j === highlight ? t.highlight : 'hover:bg-gray-50'
+            }`}
+          >
+            <span className="font-mono text-gray-400 shrink-0 w-[72px] truncate">{hh.ma_hang}</span>
+            <span className="text-gray-800 flex-1 truncate font-medium">{hh.ten_hang}</span>
+            <span className="text-gray-400 shrink-0 text-[10px]">{hh.dvt}</span>
+          </div>
+        ))}
+        <div className="px-3 py-1.5 text-[10px] text-gray-300 italic border-t">
+          ↑↓ di chuyển · Enter chọn · Esc đóng
+        </div>
+      </div>
+    ) : inputVal.length >= 2 ? (
+      <div
+        style={{ position: 'fixed', top: dropRect.top, left: dropRect.left, width: dropRect.width, zIndex: 99999 }}
+        className="bg-white border border-gray-200 rounded-lg shadow p-2.5"
+      >
+        {hangHoaList.length === 0
+          ? <p className="text-xs text-orange-500">⏳ Đang tải danh mục...</p>
+          : <p className="text-xs text-gray-400 italic">Không tìm thấy — thử gõ không dấu</p>
+        }
+      </div>
+    ) : null
+  ) : null
+
   return (
     <div className="relative">
       <input
+        ref={inputRef}
         value={inputVal}
         onChange={handleChange}
         onFocus={handleFocus}
@@ -139,38 +201,7 @@ export default function HangHoaInput({
           {isAdmin ? '⚠ Không có trong danh mục' : '✗ Vui lòng chọn từ danh mục'}
         </p>
       )}
-      {open && matches.length > 0 && (
-        <div
-          ref={listRef}
-          className="absolute z-50 left-0 right-0 top-full mt-0.5 bg-white border border-gray-200 rounded-lg shadow-xl max-h-52 overflow-y-auto"
-        >
-          {matches.map((hh, j) => (
-            <div
-              key={hh.ma_hang || j}
-              data-idx={j}
-              onMouseDown={() => doSelect(hh)}
-              className={`px-3 py-2 cursor-pointer text-xs flex items-center gap-2 border-b border-gray-50 last:border-0 ${
-                j === highlight ? t.highlight : 'hover:bg-gray-50'
-              }`}
-            >
-              <span className="font-mono text-gray-400 shrink-0 w-[72px] truncate">{hh.ma_hang}</span>
-              <span className="text-gray-800 flex-1 truncate font-medium">{hh.ten_hang}</span>
-              <span className="text-gray-400 shrink-0 text-[10px]">{hh.dvt}</span>
-            </div>
-          ))}
-          <div className="px-3 py-1.5 text-[10px] text-gray-300 italic border-t">
-            ↑↓ di chuyển · Enter chọn · Esc đóng
-          </div>
-        </div>
-      )}
-      {open && matches.length === 0 && inputVal.length >= 2 && (
-        <div className="absolute z-50 left-0 right-0 top-full mt-0.5 bg-white border border-gray-200 rounded-lg shadow p-2.5">
-          {hangHoaList.length === 0
-            ? <p className="text-xs text-orange-500 flex items-center gap-1.5">⏳ Đang tải danh mục... <span className="text-gray-400">(thử gõ lại)</span></p>
-            : <p className="text-xs text-gray-400 italic">Không tìm thấy — thử từ khóa khác hoặc gõ không dấu</p>
-          }
-        </div>
-      )}
+      {dropdownContent && createPortal(dropdownContent, document.body)}
     </div>
   )
 }
