@@ -15,7 +15,7 @@ function formatVND(n) {
 }
 const today = () => new Date().toISOString().slice(0, 10)
 
-const emptyItem = () => ({ ten_hang: '', dvt: 'cái', so_luong: '', don_gia: '', thanh_tien: '' })
+const emptyItem = () => ({ ten_hang: '', dvt: 'cái', so_luong: '', don_gia: '', thanh_tien: '', selected: false })
 const normalize = (s) => (s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/đ/g,'d').replace(/Đ/g,'D').toLowerCase()
 
 export default function CTNhapKho() {
@@ -49,7 +49,7 @@ export default function CTNhapKho() {
   }
 
   const loadHangHoa = () =>
-    getHangHoa({ limit: 2000 })
+    getHangHoa({ limit: 2000, ...(realId ? { cong_trinh_id: parseInt(realId) } : {}) })
       .then(res => setHangHoaList(res.data?.data || []))
       .catch(() => {})
 
@@ -77,6 +77,7 @@ export default function CTNhapKho() {
   const updateItem = (i, field, val) => {
     const next = [...items]
     next[i] = { ...next[i], [field]: val }
+    if (field === 'ten_hang') next[i].selected = false  // mở khóa DVT khi gõ tay
     // Tự tính thành tiền
     if (field === 'so_luong' || field === 'don_gia') {
       const sl = field === 'so_luong' ? parseFloat(val) : parseFloat(next[i].so_luong)
@@ -96,6 +97,15 @@ export default function CTNhapKho() {
     if (!form.so_phieu || !form.ngay) { setSaveMsg({ type: 'err', text: 'Vui lòng nhập số phiếu và ngày' }); return }
     const validItems = items.filter(it => it.ten_hang && parseFloat(it.so_luong) > 0)
     if (validItems.length === 0) { setSaveMsg({ type: 'err', text: 'Cần ít nhất 1 dòng hàng hợp lệ' }); return }
+    if (hangHoaList.length > 0) {
+      const invalid = validItems.find(it =>
+        !hangHoaList.some(h => normalize(h.ten_hang) === normalize(it.ten_hang))
+      )
+      if (invalid) {
+        setSaveMsg({ type: 'err', text: `"${invalid.ten_hang}" không có trong danh mục. Vui lòng chọn từ danh sách gợi ý.` })
+        return
+      }
+    }
     setSaving(true)
     setSaveMsg(null)
     try {
@@ -338,7 +348,7 @@ export default function CTNhapKho() {
                             onChange={(val) => updateItem(i, 'ten_hang', val)}
                             onSelect={(hh) => {
                               const next = [...items]
-                              next[i] = { ...next[i], ten_hang: hh.ten_hang, dvt: hh.dvt || 'cái' }
+                              next[i] = { ...next[i], ten_hang: hh.ten_hang, dvt: hh.dvt || 'cái', selected: true }
                               setItems(next)
                             }}
                             hangHoaList={hangHoaList}
@@ -349,7 +359,8 @@ export default function CTNhapKho() {
                         </td>
                         <td className="px-3 py-1.5">
                           <input value={it.dvt} onChange={e => updateItem(i, 'dvt', e.target.value)}
-                            className="w-full border border-gray-200 rounded px-2 py-1 text-xs focus:outline-none focus:border-green-300" />
+                            readOnly={!!it.selected}
+                            className={`w-full border border-gray-200 rounded px-2 py-1 text-xs focus:outline-none ${it.selected ? 'bg-gray-50 text-gray-500 cursor-default' : 'focus:border-green-300'}`} />
                         </td>
                         <td className="px-3 py-1.5">
                           <input type="number" value={it.so_luong} onChange={e => updateItem(i, 'so_luong', e.target.value)}

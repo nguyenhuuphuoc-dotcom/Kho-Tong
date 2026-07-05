@@ -20,7 +20,7 @@ const genSoPhieu = () => {
   const ymd = `${d.getFullYear()}${String(d.getMonth()+1).padStart(2,'0')}${String(d.getDate()).padStart(2,'0')}`
   return `NK-${ymd}-${String(Math.floor(Math.random()*900)+100)}`
 }
-const emptyItem = () => ({ ten_hang: '', dvt: 'cái', so_luong: 1, don_gia: 0, thanh_tien: 0 })
+const emptyItem = () => ({ ten_hang: '', dvt: 'cái', so_luong: 1, don_gia: 0, thanh_tien: 0, selected: false })
 
 const normalize = (s) => (s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/đ/g,'d').replace(/Đ/g,'D').toLowerCase()
 
@@ -48,14 +48,14 @@ export default function PhieuNhap() {
   const [hangHoaList, setHangHoaList] = useState([])
 
   const loadHangHoa = () =>
-    getHangHoa({ limit: 2000 })
+    getHangHoa({ limit: 2000, ...(selectedCT ? { cong_trinh_id: selectedCT.id } : {}) })
       .then(res => setHangHoaList(res.data?.data || []))
       .catch(() => {})
 
   useEffect(() => {
     if (ctLoading) return
     loadHangHoa()
-  }, [ctLoading])
+  }, [ctLoading, selectedCT])
 
   // AI mode
   const [createMode, setCreateMode] = useState('manual') // 'manual' | 'ai'
@@ -115,6 +115,7 @@ export default function PhieuNhap() {
     setItems(prev => prev.map((it, i) => {
       if (i !== idx) return it
       const updated = { ...it, [field]: val }
+      if (field === 'ten_hang') updated.selected = false  // mở khóa DVT khi gõ tay
       const sl = field === 'so_luong' ? parseFloat(val) || 0 : parseFloat(it.so_luong) || 0
       const dg = field === 'don_gia'  ? parseFloat(val) || 0 : parseFloat(it.don_gia)  || 0
       updated.thanh_tien = sl * dg
@@ -129,6 +130,15 @@ export default function PhieuNhap() {
     if (!form.so_phieu.trim()) { setCreateError('Nhập số phiếu'); return }
     const validItems = items.filter(it => it.ten_hang.trim())
     if (validItems.length === 0) { setCreateError('Thêm ít nhất 1 hàng hóa'); return }
+    if (hangHoaList.length > 0) {
+      const invalid = validItems.find(it =>
+        !hangHoaList.some(h => normalize(h.ten_hang) === normalize(it.ten_hang))
+      )
+      if (invalid) {
+        setCreateError(`"${invalid.ten_hang}" không có trong danh mục. Vui lòng chọn từ danh sách gợi ý.`)
+        return
+      }
+    }
     setCreating(true)
     setCreateError('')
     try {
@@ -502,7 +512,7 @@ export default function PhieuNhap() {
                                 <HangHoaInput
                                   value={it.ten_hang}
                                   onChange={(val) => updateItem(i, 'ten_hang', val)}
-                                  onSelect={(hh) => setItems(prev => prev.map((r, j) => j !== i ? r : { ...r, ten_hang: hh.ten_hang, dvt: hh.dvt || r.dvt }))}
+                                  onSelect={(hh) => setItems(prev => prev.map((r, j) => j !== i ? r : { ...r, ten_hang: hh.ten_hang, dvt: hh.dvt || r.dvt, selected: true }))}
                                   hangHoaList={hangHoaList}
                                   isAdmin={isAdminUser}
                                   theme="blue"
@@ -510,7 +520,7 @@ export default function PhieuNhap() {
                                 />
                               </td>
                               <td className="px-1 py-1"><input type="number" value={it.so_luong} min="0" onChange={e => updateItem(i, 'so_luong', e.target.value)} className="w-full px-2 py-1.5 border border-gray-200 rounded text-xs text-right focus:outline-none focus:border-blue-300" /></td>
-                              <td className="px-1 py-1"><input value={it.dvt} onChange={e => updateItem(i, 'dvt', e.target.value)} className="w-full px-2 py-1.5 border border-gray-200 rounded text-xs focus:outline-none focus:border-blue-300" /></td>
+                              <td className="px-1 py-1"><input value={it.dvt} onChange={e => updateItem(i, 'dvt', e.target.value)} readOnly={!!it.selected} className={`w-full px-2 py-1.5 border border-gray-200 rounded text-xs focus:outline-none ${it.selected ? 'bg-gray-50 text-gray-500 cursor-default' : 'focus:border-blue-300'}`} /></td>
                               <td className="px-1 py-1"><input type="number" value={it.don_gia} min="0" onChange={e => updateItem(i, 'don_gia', e.target.value)} className="w-full px-2 py-1.5 border border-gray-200 rounded text-xs text-right focus:outline-none focus:border-blue-300" /></td>
                               <td className="px-3 py-1.5 text-right font-semibold text-blue-600">{formatVND(it.thanh_tien)}</td>
                               <td className="px-1 py-1 text-center">

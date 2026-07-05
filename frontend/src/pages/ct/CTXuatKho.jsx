@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { useOutletContext, useParams } from 'react-router-dom'
 import { Upload, Search, RefreshCw, Eye, Plus, X, Trash2, FileDown } from 'lucide-react'
-import { getPhieuList, getChiTietPhieu, createPhieu, getHangHoa } from '../../api'
+import { getPhieuList, getChiTietPhieu, createPhieu, getHangHoa, getTonKho } from '../../api'
 import HangHoaInput from '../../components/HangHoaInput'
 import { exportPhieuList } from '../../utils/exportExcel'
 import { useAuth } from '../../context/AuthContext'
@@ -14,7 +14,7 @@ function formatVND(n) {
   return num.toLocaleString('vi-VN')
 }
 const today = () => new Date().toISOString().slice(0, 10)
-const emptyItem = () => ({ ten_hang: '', dvt: 'cái', so_luong: '', don_gia: '', thanh_tien: '' })
+const emptyItem = () => ({ ten_hang: '', dvt: 'cái', so_luong: '', don_gia: '', thanh_tien: '', selected: false })
 const normalize = (s) => (s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/đ/g,'d').replace(/Đ/g,'D').toLowerCase()
 
 export default function CTXuatKho() {
@@ -46,9 +46,18 @@ export default function CTXuatKho() {
   }
 
   const loadHangHoa = () =>
-    getHangHoa({ limit: 2000 })
-      .then(res => setHangHoaList(res.data?.data || []))
-      .catch(() => {})
+    getTonKho({ cong_trinh_id: parseInt(realId) || undefined })
+      .then(res => {
+        const rows = (res.data?.data || [])
+          .filter(tk => (tk.ton_cuoi ?? 0) > 0)
+          .map(tk => ({ ten_hang: tk.ten_hang, dvt: tk.dvt || 'cái', ma_hang: '' }))
+        setHangHoaList(rows)
+      })
+      .catch(() =>
+        getHangHoa({ limit: 2000, cong_trinh_id: parseInt(realId) || undefined })
+          .then(res => setHangHoaList(res.data?.data || []))
+          .catch(() => {})
+      )
 
   useEffect(() => {
     loadData()
@@ -73,6 +82,7 @@ export default function CTXuatKho() {
   const updateItem = (i, field, val) => {
     const next = [...items]
     next[i] = { ...next[i], [field]: val }
+    if (field === 'ten_hang') next[i].selected = false  // mở khóa DVT khi gõ tay
     if (field === 'so_luong' || field === 'don_gia') {
       const sl = field === 'so_luong' ? parseFloat(val) : parseFloat(next[i].so_luong)
       const dg = field === 'don_gia' ? parseFloat(val) : parseFloat(next[i].don_gia)
@@ -88,6 +98,15 @@ export default function CTXuatKho() {
     if (!form.so_phieu || !form.ngay) { setSaveMsg({ type: 'err', text: 'Vui lòng nhập số phiếu và ngày' }); return }
     const validItems = items.filter(it => it.ten_hang && parseFloat(it.so_luong) > 0)
     if (validItems.length === 0) { setSaveMsg({ type: 'err', text: 'Cần ít nhất 1 dòng hàng hợp lệ' }); return }
+    if (hangHoaList.length > 0) {
+      const invalid = validItems.find(it =>
+        !hangHoaList.some(h => normalize(h.ten_hang) === normalize(it.ten_hang))
+      )
+      if (invalid) {
+        setSaveMsg({ type: 'err', text: `"${invalid.ten_hang}" không có trong kho. Vui lòng chọn từ danh sách gợi ý.` })
+        return
+      }
+    }
     setSaving(true)
     setSaveMsg(null)
     try {
@@ -270,7 +289,7 @@ export default function CTXuatKho() {
               <div>
                 <h3 className="font-bold text-gray-800 text-lg">Tạo phiếu xuất kho mới</h3>
                 <p className="text-xs text-gray-500 mt-0.5">
-                  {hangHoaList.length > 0 ? `${hangHoaList.length} mặt hàng trong danh mục` : '⚠ Danh mục chưa tải'}
+                  {hangHoaList.length > 0 ? `${hangHoaList.length} mặt hàng đang có trong kho` : '⚠ Chưa có hàng trong kho'}
                 </p>
               </div>
               <button onClick={() => setShowForm(false)} className="p-1 hover:bg-white rounded-lg"><X className="w-5 h-5 text-gray-400" /></button>
@@ -324,7 +343,7 @@ export default function CTXuatKho() {
                             onChange={(val) => updateItem(i, 'ten_hang', val)}
                             onSelect={(hh) => {
                               const next = [...items]
-                              next[i] = { ...next[i], ten_hang: hh.ten_hang, dvt: hh.dvt || 'cái' }
+                              next[i] = { ...next[i], ten_hang: hh.ten_hang, dvt: hh.dvt || 'cái', selected: true }
                               setItems(next)
                             }}
                             hangHoaList={hangHoaList}
@@ -335,7 +354,8 @@ export default function CTXuatKho() {
                         </td>
                         <td className="px-3 py-1.5">
                           <input value={it.dvt} onChange={e => updateItem(i, 'dvt', e.target.value)}
-                            className="w-full border border-gray-200 rounded px-2 py-1 text-xs focus:outline-none focus:border-orange-300" />
+                            readOnly={!!it.selected}
+                            className={`w-full border border-gray-200 rounded px-2 py-1 text-xs focus:outline-none ${it.selected ? 'bg-gray-50 text-gray-500 cursor-default' : 'focus:border-orange-300'}`} />
                         </td>
                         <td className="px-3 py-1.5">
                           <input type="number" value={it.so_luong} onChange={e => updateItem(i, 'so_luong', e.target.value)}
