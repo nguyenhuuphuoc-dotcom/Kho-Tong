@@ -47,11 +47,14 @@ export default function PhieuNhap() {
   // Danh muc hang hoa cho autocomplete — load san truoc khi mo modal
   const [hangHoaList, setHangHoaList] = useState([])
 
-  useEffect(() => {
-    if (ctLoading) return
+  const loadHangHoa = () =>
     getHangHoa({ limit: 2000 })
       .then(res => setHangHoaList(res.data?.data || []))
       .catch(() => {})
+
+  useEffect(() => {
+    if (ctLoading) return
+    loadHangHoa()
   }, [ctLoading])
 
   // AI mode
@@ -103,7 +106,8 @@ export default function PhieuNhap() {
     setCreateMode('manual')
     setAiFile(null)
     setAiError('')
-    // hangHoaList da duoc load san boi useEffect phia tren
+    // Retry nếu hangHoaList chưa load (Render cold start hoặc lỗi mạng)
+    if (hangHoaList.length === 0) loadHangHoa()
     setShowCreate(true)
   }
 
@@ -388,7 +392,11 @@ export default function PhieuNhap() {
             <div className="flex items-center justify-between p-5 border-b">
               <div>
                 <h3 className="font-bold text-gray-800 text-lg">Tạo Phiếu Nhập Kho</h3>
-                <p className="text-sm text-teal-600 font-medium">📌 {selectedCT?.ten_ct}</p>
+                <p className="text-sm text-teal-600 font-medium">📌 {selectedCT?.ten_ct}
+                  <span className="ml-2 text-xs text-gray-400 font-normal">
+                    {hangHoaList.length > 0 ? `${hangHoaList.length} mặt hàng trong danh mục` : '⚠ Danh mục chưa tải'}
+                  </span>
+                </p>
               </div>
               <button onClick={() => setShowCreate(false)} className="p-1 hover:bg-gray-100 rounded-lg text-gray-400">
                 <X className="w-5 h-5" />

@@ -46,11 +46,14 @@ export default function PhieuXuat() {
   // Danh mục hàng hóa cho autocomplete — load sẵn trước khi mở modal
   const [hangHoaList, setHangHoaList] = useState([])
 
-  useEffect(() => {
-    if (ctLoading) return
+  const loadHangHoa = () =>
     getHangHoa({ limit: 2000 })
       .then(res => setHangHoaList(res.data?.data || []))
       .catch(() => {})
+
+  useEffect(() => {
+    if (ctLoading) return
+    loadHangHoa()
   }, [ctLoading])
 
   // AI mode
@@ -102,7 +105,7 @@ export default function PhieuXuat() {
     setCreateMode('manual')
     setAiFile(null)
     setAiError('')
-    // hangHoaList đã được load sẵn bởi useEffect phía trên
+    if (hangHoaList.length === 0) loadHangHoa()
     setShowCreate(true)
   }
 
@@ -387,7 +390,11 @@ export default function PhieuXuat() {
             <div className="flex items-center justify-between p-5 border-b">
               <div>
                 <h3 className="font-bold text-gray-800 text-lg">Tạo Phiếu Xuất Kho</h3>
-                <p className="text-sm text-teal-600 font-medium">📌 {selectedCT?.ten_ct}</p>
+                <p className="text-sm text-teal-600 font-medium">📌 {selectedCT?.ten_ct}
+                  <span className="ml-2 text-xs text-gray-400 font-normal">
+                    {hangHoaList.length > 0 ? `${hangHoaList.length} mặt hàng trong danh mục` : '⚠ Danh mục chưa tải'}
+                  </span>
+                </p>
               </div>
               <button onClick={() => setShowCreate(false)} className="p-1 hover:bg-gray-100 rounded-lg text-gray-400">
                 <X className="w-5 h-5" />

@@ -88,6 +88,7 @@ export default function HangHoaInput({
       setOpen(false)
       const trimmed = inputVal.trim()
       if (!trimmed) { setError(false); return }
+      if (hangHoaList.length === 0) { setError(false); return }  // list chưa tải, không validate
       const match = hangHoaList.find(h => normalize(h.ten_hang) === normalize(trimmed))
       if (!match) {
         setError(true)
@@ -160,6 +161,14 @@ export default function HangHoaInput({
           <div className="px-3 py-1.5 text-[10px] text-gray-300 italic border-t">
             ↑↓ di chuyển · Enter chọn · Esc đóng
           </div>
+        </div>
+      )}
+      {open && matches.length === 0 && inputVal.length >= 2 && (
+        <div className="absolute z-50 left-0 right-0 top-full mt-0.5 bg-white border border-gray-200 rounded-lg shadow p-2.5">
+          {hangHoaList.length === 0
+            ? <p className="text-xs text-orange-500 flex items-center gap-1.5">⏳ Đang tải danh mục... <span className="text-gray-400">(thử gõ lại)</span></p>
+            : <p className="text-xs text-gray-400 italic">Không tìm thấy — thử từ khóa khác hoặc gõ không dấu</p>
+          }
         </div>
       )}
     </div>

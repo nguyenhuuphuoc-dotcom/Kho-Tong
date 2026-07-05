@@ -45,11 +45,14 @@ export default function CTXuatKho() {
       .finally(() => setLoading(false))
   }
 
-  useEffect(() => {
-    loadData()
+  const loadHangHoa = () =>
     getHangHoa({ limit: 2000 })
       .then(res => setHangHoaList(res.data?.data || []))
       .catch(() => {})
+
+  useEffect(() => {
+    loadData()
+    loadHangHoa()
   }, [realId])
 
   const openChiTiet = (phieu) => {
@@ -142,7 +145,7 @@ export default function CTXuatKho() {
             <FileDown className={`w-4 h-4 ${exporting ? 'animate-bounce' : ''}`} />
             {exporting ? '...' : 'Excel'}
           </button>
-          <button onClick={() => { setShowForm(true); setSaveMsg(null) }}
+          <button onClick={() => { if (hangHoaList.length === 0) loadHangHoa(); setShowForm(true); setSaveMsg(null) }}
             className="flex items-center gap-2 px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-lg text-sm font-medium">
             <Plus className="w-4 h-4" /> Tạo phiếu XK
           </button>
@@ -264,7 +267,12 @@ export default function CTXuatKho() {
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4 overflow-y-auto">
           <div className="bg-white rounded-xl shadow-xl w-full max-w-4xl my-4">
             <div className="flex items-center justify-between p-5 border-b bg-orange-50 rounded-t-xl">
-              <h3 className="font-bold text-gray-800 text-lg">Tạo phiếu xuất kho mới</h3>
+              <div>
+                <h3 className="font-bold text-gray-800 text-lg">Tạo phiếu xuất kho mới</h3>
+                <p className="text-xs text-gray-500 mt-0.5">
+                  {hangHoaList.length > 0 ? `${hangHoaList.length} mặt hàng trong danh mục` : '⚠ Danh mục chưa tải'}
+                </p>
+              </div>
               <button onClick={() => setShowForm(false)} className="p-1 hover:bg-white rounded-lg"><X className="w-5 h-5 text-gray-400" /></button>
             </div>
             <div className="p-5 space-y-4">
