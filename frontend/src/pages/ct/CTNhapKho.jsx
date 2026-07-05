@@ -49,7 +49,7 @@ export default function CTNhapKho() {
   }
 
   const loadHangHoa = () =>
-    getHangHoa({ limit: 2000 })
+    getHangHoa({ cong_trinh_id: realId, limit: 2000 })
       .then(res => setHangHoaList(res.data?.data || []))
       .catch(() => {})
 
@@ -344,6 +344,7 @@ export default function CTNhapKho() {
                             hangHoaList={hangHoaList}
                             theme="green"
                             placeholder="Tên hàng..."
+                            isAdmin={user?.role === 'admin'}
                           />
                         </td>
                         <td className="px-3 py-1.5">
