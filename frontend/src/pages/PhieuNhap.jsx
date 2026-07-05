@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { Download, Search, RefreshCw, Eye, X, Plus, Trash2, Bot, Loader, FileText, FileDown } from 'lucide-react'
+import HangHoaInput from '../components/HangHoaInput'
 import { getPhieuList, getChiTietPhieu, createPhieu, docPhieu, getHangHoa } from '../api'
 import { useCongTrinh } from '../context/CongTrinhContext'
 import { useAuth } from '../context/AuthContext'
@@ -45,7 +46,6 @@ export default function PhieuNhap() {
 
   // Danh muc hang hoa cho autocomplete — load san truoc khi mo modal
   const [hangHoaList, setHangHoaList] = useState([])
-  const [activeDropdown, setActiveDropdown] = useState(null)
 
   useEffect(() => {
     if (ctLoading) return
@@ -103,25 +103,8 @@ export default function PhieuNhap() {
     setCreateMode('manual')
     setAiFile(null)
     setAiError('')
-    setActiveDropdown(null)
     // hangHoaList da duoc load san boi useEffect phia tren
     setShowCreate(true)
-  }
-
-  const getDropdownOptions = (idx) => {
-    const kw = normalize(items[idx]?.ten_hang || '').trim()
-    if (!kw) return hangHoaList.slice(0, 20)
-    return hangHoaList.filter(h =>
-      normalize(h.ten_hang).includes(kw) ||
-      (h.ma_hang || '').toLowerCase().includes(kw)
-    ).slice(0, 25)
-  }
-
-  const selectHangHoa = (idx, hh) => {
-    setItems(prev => prev.map((it, i) =>
-      i !== idx ? it : { ...it, ten_hang: hh.ten_hang, dvt: hh.dvt || it.dvt }
-    ))
-    setActiveDropdown(null)
   }
 
   const updateItem = (idx, field, val) => {
@@ -507,28 +490,16 @@ export default function PhieuNhap() {
                           {items.map((it, i) => (
                             <tr key={i} className="border-t border-gray-100">
                               <td className="px-3 py-1.5 text-gray-400 text-center">{i + 1}</td>
-                              <td className="px-1 py-1 relative">
-                                <input
+                              <td className="px-1 py-1">
+                                <HangHoaInput
                                   value={it.ten_hang}
-                                  onChange={e => { updateItem(i, 'ten_hang', e.target.value); setActiveDropdown(i) }}
-                                  onFocus={() => setActiveDropdown(i)}
-                                  onBlur={() => setTimeout(() => setActiveDropdown(null), 150)}
+                                  onChange={(val) => updateItem(i, 'ten_hang', val)}
+                                  onSelect={(hh) => setItems(prev => prev.map((r, j) => j !== i ? r : { ...r, ten_hang: hh.ten_hang, dvt: hh.dvt || r.dvt }))}
+                                  hangHoaList={hangHoaList}
+                                  isAdmin={isAdminUser}
+                                  theme="blue"
                                   placeholder="Tên vật tư..."
-                                  className="w-full px-2 py-1.5 border border-gray-200 rounded text-xs focus:outline-none focus:border-blue-300"
                                 />
-                                {activeDropdown === i && getDropdownOptions(i).length > 0 && (
-                                  <div className="absolute left-0 top-full mt-0.5 bg-white border border-gray-200 rounded-lg shadow-xl z-[100] w-72 max-h-48 overflow-auto">
-                                    {getDropdownOptions(i).map((hh, j) => (
-                                      <button key={j} type="button"
-                                        onMouseDown={() => selectHangHoa(i, hh)}
-                                        className="w-full text-left px-3 py-2 hover:bg-blue-50 text-xs flex items-center gap-2 border-b border-gray-50 last:border-0">
-                                        <span className="font-mono text-gray-400 flex-shrink-0 w-20 truncate">{hh.ma_hang}</span>
-                                        <span className="text-gray-800 flex-1 truncate">{hh.ten_hang}</span>
-                                        <span className="text-blue-400 font-mono flex-shrink-0">{hh.dvt}</span>
-                                      </button>
-                                    ))}
-                                  </div>
-                                )}
                               </td>
                               <td className="px-1 py-1"><input type="number" value={it.so_luong} min="0" onChange={e => updateItem(i, 'so_luong', e.target.value)} className="w-full px-2 py-1.5 border border-gray-200 rounded text-xs text-right focus:outline-none focus:border-blue-300" /></td>
                               <td className="px-1 py-1"><input value={it.dvt} onChange={e => updateItem(i, 'dvt', e.target.value)} className="w-full px-2 py-1.5 border border-gray-200 rounded text-xs focus:outline-none focus:border-blue-300" /></td>

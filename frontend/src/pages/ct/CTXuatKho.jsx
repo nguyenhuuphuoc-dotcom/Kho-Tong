@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { useOutletContext, useParams } from 'react-router-dom'
 import { Upload, Search, RefreshCw, Eye, Plus, X, Trash2, FileDown } from 'lucide-react'
 import { getPhieuList, getChiTietPhieu, createPhieu, getHangHoa } from '../../api'
+import HangHoaInput from '../../components/HangHoaInput'
 import { exportPhieuList } from '../../utils/exportExcel'
 import { useAuth } from '../../context/AuthContext'
 
@@ -35,7 +36,6 @@ export default function CTXuatKho() {
   const [items, setItems] = useState([emptyItem()])
   const [hangHoaList, setHangHoaList] = useState([])
   const [saveMsg, setSaveMsg] = useState(null)
-  const [openSuggest, setOpenSuggest] = useState(null)
 
   const loadData = () => {
     setLoading(true)
@@ -78,12 +78,6 @@ export default function CTXuatKho() {
     setItems(next)
   }
 
-  const handleSelectHang = (i, tenHang) => {
-    const hh = hangHoaList.find(h => h.ten_hang === tenHang)
-    const next = [...items]
-    next[i] = { ...next[i], ten_hang: tenHang, dvt: hh?.dvt || 'cái' }
-    setItems(next)
-  }
 
   const tongTien = items.reduce((s, it) => s + (parseFloat(it.thanh_tien) || 0), 0)
 
@@ -316,40 +310,19 @@ export default function CTXuatKho() {
                     {items.map((it, i) => (
                       <tr key={i} className="border-t border-gray-100">
                         <td className="px-3 py-1.5 text-gray-400 text-xs">{i+1}</td>
-                        <td className="px-3 py-1.5 relative">
-                          <input
+                        <td className="px-3 py-1.5">
+                          <HangHoaInput
                             value={it.ten_hang}
-                            onChange={e => { updateItem(i, 'ten_hang', e.target.value); setOpenSuggest(i) }}
-                            onFocus={() => setOpenSuggest(i)}
-                            onBlur={() => setTimeout(() => setOpenSuggest(null), 200)}
+                            onChange={(val) => updateItem(i, 'ten_hang', val)}
+                            onSelect={(hh) => {
+                              const next = [...items]
+                              next[i] = { ...next[i], ten_hang: hh.ten_hang, dvt: hh.dvt || 'cái' }
+                              setItems(next)
+                            }}
+                            hangHoaList={hangHoaList}
+                            theme="orange"
                             placeholder="Tên hàng..."
-                            autoComplete="off"
-                            className="w-full border border-gray-200 rounded px-2 py-1 text-xs focus:outline-none focus:border-orange-300"
                           />
-                          {openSuggest === i && (() => {
-                            const q = normalize(it.ten_hang)
-                            const matches = hangHoaList.filter(h =>
-                              !q || normalize(h.ten_hang).includes(q) || (h.ma_hang||'').toLowerCase().includes(q)
-                            ).slice(0, 25)
-                            if (!matches.length) return null
-                            return (
-                              <div className="absolute z-20 left-0 right-0 top-full mt-0.5 bg-white border border-gray-200 rounded-lg shadow-lg max-h-44 overflow-y-auto">
-                                {matches.map(h => (
-                                  <div key={h.ma_hang}
-                                    onMouseDown={() => {
-                                      const next = [...items]
-                                      next[i] = { ...next[i], ten_hang: h.ten_hang, dvt: h.dvt || 'cái' }
-                                      setItems(next)
-                                      setOpenSuggest(null)
-                                    }}
-                                    className="px-3 py-1.5 hover:bg-orange-50 cursor-pointer text-xs flex items-center gap-2">
-                                    <span className="font-mono text-gray-400 shrink-0">{h.ma_hang}</span>
-                                    <span className="text-gray-800">{h.ten_hang}</span>
-                                  </div>
-                                ))}
-                              </div>
-                            )
-                          })()}
                         </td>
                         <td className="px-3 py-1.5">
                           <input value={it.dvt} onChange={e => updateItem(i, 'dvt', e.target.value)}

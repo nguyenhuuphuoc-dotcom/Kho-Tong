@@ -15,7 +15,7 @@ echo [2/3] Add tat ca thay doi...
 git add -A
 
 echo [3/3] Commit va push...
-git commit -m "fix: autocomplete ma hang + tim kiem khong dau + ten logo theo role user/admin"
+git commit -m "feat: HangHoaInput component - autocomplete phim tat + validate danh muc + tim khong dau"
 git push
 
 echo.
