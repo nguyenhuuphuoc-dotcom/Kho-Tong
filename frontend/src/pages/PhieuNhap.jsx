@@ -494,18 +494,20 @@ export default function PhieuNhap() {
             </div>
 
             <div className="overflow-auto flex-1 p-5 space-y-4">
-              {!editingPhieu && <div className="flex gap-1 p-1 bg-gray-100 rounded-lg">
-                <button onClick={() => setCreateMode('manual')}
-                  className={"flex-1 py-1.5 px-3 rounded-md text-xs font-medium transition-colors " + (createMode === 'manual' ? 'bg-white text-gray-800 shadow-sm' : 'text-gray-500 hover:text-gray-700')}>
-                  Nhập tay
-                </button>
-                <button onClick={() => setCreateMode('ai')}
-                  className={"flex-1 py-1.5 px-3 rounded-md text-xs font-medium flex items-center justify-center gap-1.5 transition-colors " + (createMode === 'ai' ? 'bg-white text-gray-800 shadow-sm' : 'text-gray-500 hover:text-gray-700')}>
-                  <Bot className="w-3.5 h-3.5" /> Đọc bảng AI
-                </button>
-              </div>
+              {!editingPhieu && (
+                <div className="flex gap-1 p-1 bg-gray-100 rounded-lg">
+                  <button onClick={() => setCreateMode('manual')}
+                    className={"flex-1 py-1.5 px-3 rounded-md text-xs font-medium transition-colors " + (createMode === 'manual' ? 'bg-white text-gray-800 shadow-sm' : 'text-gray-500 hover:text-gray-700')}>
+                    Nhập tay
+                  </button>
+                  <button onClick={() => setCreateMode('ai')}
+                    className={"flex-1 py-1.5 px-3 rounded-md text-xs font-medium flex items-center justify-center gap-1.5 transition-colors " + (createMode === 'ai' ? 'bg-white text-gray-800 shadow-sm' : 'text-gray-500 hover:text-gray-700')}>
+                    <Bot className="w-3.5 h-3.5" /> Đọc bảng AI
+                  </button>
+                </div>
+              )}
 
-              {createMode === 'ai' && (
+              {!editingPhieu && createMode === 'ai' && (
                 <div className="space-y-3">
                   <div
                     className={"border-2 border-dashed rounded-xl p-6 text-center cursor-pointer transition-colors " + (aiDragging ? 'border-blue-400 bg-blue-50' : 'border-gray-200 hover:border-blue-300 hover:bg-blue-50')}
@@ -538,7 +540,6 @@ export default function PhieuNhap() {
                   <p className="text-xs text-gray-400 text-center">AI đọc xong sẽ chuyển sang Nhập tay để kiểm tra</p>
                 </div>
               )}
-              </div>}
 
               {(createMode === 'manual' || editingPhieu) && (
                 <>
