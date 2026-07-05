@@ -211,7 +211,7 @@ function KPICard({ icon: Icon, iconBg, title, value, subtitle, valueColor, loadi
 }
 
 export default function Dashboard() {
-  const { selectedCT, ctLoading, dateFrom, dateTo } = useCongTrinh()
+  const { selectedCT, ctLoading, congTrinhs, isAdmin, dateFrom, dateTo } = useCongTrinh()
   const [chartMode, setChartMode] = useState('month')
   const [loading, setLoading] = useState(true)
   const [kpi, setKpi] = useState(null)
@@ -220,11 +220,14 @@ export default function Dashboard() {
   const [canhBao, setCanhBao] = useState([])
   const [bieuDoData, setBieuDoData] = useState([])
 
+  // Non-admin: luôn dùng CT được gán; Admin: dùng selectedCT (null = tất cả)
+  const effectiveCTId = isAdmin ? selectedCT?.id : congTrinhs[0]?.id
+
   const loadData = () => {
-    // Chờ context load xong để tránh gọi API không có filter (race condition)
     if (ctLoading) return
+    if (!isAdmin && !effectiveCTId) return
     setLoading(true)
-    const ctParam = selectedCT ? { cong_trinh_id: selectedCT.id } : {}
+    const ctParam = effectiveCTId ? { cong_trinh_id: effectiveCTId } : {}
     const dateParam = { date_from: dateFrom, date_to: dateTo }
     Promise.all([
       getBaoCaoTongHop({ ...ctParam, ...dateParam }),

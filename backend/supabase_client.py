@@ -430,15 +430,32 @@ def get_all_chi_tiet() -> list:
 
 def get_lich_su(phieu_list: list, limit: int = 20000) -> list:
     """
-    Tạo lịch sử giao dịch bằng cách join chi_tiet_phieu với phieu_list.
-    phieu_list: list dict có id, loai, so_phieu, ngay, doi_tac, cong_trinh_id
+    Tạo lịch sử giao dịch — fetch chi_tiet_phieu THEO phieu_ids cụ thể.
+    Nguyên tắc: mọi truy vấn Supabase phải lọc theo cong_trinh_id (qua phieu_ids).
     """
-    chi_tiets = get_all_chi_tiet()
+    if not phieu_list:
+        return []
     phieu_map = {p["id"]: p for p in phieu_list if p.get("id")}
+    phieu_ids = list(phieu_map.keys())
+    if not phieu_ids:
+        return []
+
+    # Batch-fetch chi_tiet chỉ cho các phieu_ids thuộc CT đã lọc
+    chi_tiets: list = []
+    for i in range(0, len(phieu_ids), 100):
+        chunk = phieu_ids[i:i + 100]
+        ids_str = ",".join(str(x) for x in chunk)
+        rows = select("chi_tiet_phieu",
+                      query="phieu_id,ten_hang,dvt,so_luong,don_gia,thanh_tien,ghi_chu",
+                      filters=f"phieu_id=in.({ids_str})")
+        chi_tiets.extend(rows)
+
     result = []
     for r in chi_tiets:
         pid = r.get("phieu_id")
-        p   = phieu_map.get(pid, {})
+        p   = phieu_map.get(pid)
+        if not p:
+            continue
         result.append({
             "ten_hang":      r.get("ten_hang", ""),
             "dvt":           r.get("dvt", ""),

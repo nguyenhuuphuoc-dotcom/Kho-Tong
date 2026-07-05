@@ -6,16 +6,20 @@ import { useCongTrinh } from '../context/CongTrinhContext'
 const fmt = (n) => (n ?? 0).toLocaleString('vi-VN')
 
 export default function TonKho() {
-  const { selectedCT, ctLoading } = useCongTrinh()
+  const { selectedCT, ctLoading, congTrinhs, isAdmin } = useCongTrinh()
   const [data, setData] = useState([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
   const [showCanhBao, setShowCanhBao] = useState(false)
 
+  // Non-admin: luôn dùng CT được gán; Admin: dùng selectedCT (null = tất cả)
+  const effectiveCTId = isAdmin ? selectedCT?.id : congTrinhs[0]?.id
+
   const loadData = () => {
     if (ctLoading) return
+    if (!isAdmin && !effectiveCTId) return
     setLoading(true)
-    const params = selectedCT ? { cong_trinh_id: selectedCT.id } : {}
+    const params = effectiveCTId ? { cong_trinh_id: effectiveCTId } : {}
     getTonKho(params)
       .then(res => setData(res.data?.data || []))
       .catch(err => console.error(err))

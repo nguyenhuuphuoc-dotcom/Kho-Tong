@@ -19,7 +19,7 @@ function getDefaultDates() {
 }
 
 export default function BaoCao() {
-  const { selectedCT, ctLoading, congTrinhs } = useCongTrinh()
+  const { selectedCT, ctLoading, congTrinhs, isAdmin } = useCongTrinh()
   const defaults = getDefaultDates()
   const [phieuList, setPhieuList] = useState([])
   const [loading, setLoading] = useState(true)
@@ -33,18 +33,24 @@ export default function BaoCao() {
 
   const ctMap = Object.fromEntries(congTrinhs.map(ct => [ct.id, ct.ten_ct]))
 
+  // Non-admin: luôn dùng CT được gán; Admin: dùng selectedCT (null = tất cả)
+  const effectiveCTId = isAdmin ? selectedCT?.id : congTrinhs[0]?.id
+
   const loadData = () => {
     if (ctLoading) return
+    if (!isAdmin && !effectiveCTId) return
     setLoading(true)
     const params = { limit: 1000 }
-    if (selectedCT) params.cong_trinh_id = selectedCT.id
+    if (effectiveCTId) params.cong_trinh_id = effectiveCTId
+    if (tuNgay) params.date_from = tuNgay
+    if (denNgay) params.date_to  = denNgay
     getPhieuList(params)
       .then(res => setPhieuList(res.data?.data || []))
       .catch(err => console.error(err))
       .finally(() => setLoading(false))
   }
 
-  useEffect(() => { loadData() }, [selectedCT, ctLoading])
+  useEffect(() => { loadData() }, [selectedCT, ctLoading, tuNgay, denNgay])
 
   const openChiTiet = (phieu) => {
     setSelectedPhieu(phieu)

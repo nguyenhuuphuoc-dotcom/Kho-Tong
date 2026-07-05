@@ -71,11 +71,15 @@ export default function PhieuNhap() {
   const [aiDragging, setAiDragging] = useState(false)
   const aiRef = useRef()
 
+  // Non-admin: luôn dùng CT được gán; Admin: dùng selectedCT (null = tất cả)
+  const effectiveCTId = isAdmin ? selectedCT?.id : congTrinhs[0]?.id
+
   const loadData = () => {
     if (ctLoading) return
+    if (!isAdmin && !effectiveCTId) return  // non-admin phải có CT
     setLoading(true)
     const params = { loai: 'NK', limit: 500 }
-    if (selectedCT) params.cong_trinh_id = selectedCT.id
+    if (effectiveCTId) params.cong_trinh_id = effectiveCTId
     if (dateFrom) params.date_from = dateFrom
     if (dateTo)   params.date_to   = dateTo
     getPhieuList(params)
@@ -537,7 +541,12 @@ export default function PhieuNhap() {
                     className="w-full py-2.5 bg-blue-500 text-white rounded-xl font-medium text-sm hover:bg-blue-600 disabled:opacity-50 flex items-center justify-center gap-2">
                     {aiLoading ? <><Loader className="w-4 h-4 animate-spin" /> AI đang đọc...</> : <><Bot className="w-4 h-4" /> Đọc và điền form tự động</>}
                   </button>
-                  <p className="text-xs text-gray-400 text-center">AI đọc xong sẽ chuyển sang Nhập tay để kiểm tra</p>
+                  <div className="flex items-center justify-center gap-1.5">
+                    <span className="text-xs text-gray-400">Powered by</span>
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-purple-50 text-purple-600 text-xs font-medium rounded-full border border-purple-100">
+                      <Bot className="w-3 h-3" /> Claude Sonnet
+                    </span>
+                  </div>
                 </div>
               )}
 
