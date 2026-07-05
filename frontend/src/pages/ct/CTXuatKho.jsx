@@ -46,7 +46,7 @@ export default function CTXuatKho() {
   }
 
   const loadHangHoa = () =>
-    getHangHoa({ cong_trinh_id: realId, limit: 2000 })
+    getHangHoa({ limit: 2000 })
       .then(res => setHangHoaList(res.data?.data || []))
       .catch(() => {})
 

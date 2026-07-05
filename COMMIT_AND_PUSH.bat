@@ -1,26 +1,44 @@
 @echo off
 chcp 65001 >nul
-echo ========================================
-echo  COMMIT VA PUSH LEN GITHUB
-echo ========================================
-echo.
+title Deploy KhoUNICE Web
 
 cd /d "D:\AI\Test AI\KhoUNICE_Web"
 
-echo [1/3] Kiem tra trang thai...
+echo.
+echo ==========================================
+echo   DEPLOY KHOUNICE - HP Cons Viet Nam
+echo ==========================================
+echo.
+
+:: Kiem tra co thay doi gi khong
+git status --short > nul 2>&1
+git diff --quiet && git diff --cached --quiet
+if %errorlevel%==0 (
+    echo [INFO] Khong co thay doi nao de push.
+    pause
+    exit /b
+)
+
+echo [1/3] Cac file da thay doi:
 git status --short
 echo.
 
-echo [2/3] Add tat ca thay doi...
-git add -A
+:: Hoi message commit
+set /p MSG="[2/3] Nhap mo ta thay doi (Enter de dung mac dinh): "
+if "%MSG%"=="" set MSG=update: cap nhat app %date% %time%
 
-echo [3/3] Commit va push...
-git commit -m "fix: autocomplete retry khi danh muc chua tai + hien count + khong bao loi khi list rong"
+:: Add, commit, push
+git add -A
+git commit -m "%MSG%"
+
+echo.
+echo [3/3] Dang push len GitHub...
 git push
 
 echo.
-echo ========================================
-echo  XONG! Render se tu dong build lai.
-echo  Cho ~3-5 phut roi Ctrl+Shift+R de test.
-echo ========================================
+echo ==========================================
+echo   XONG! Render se tu dong build lai.
+echo   Cho ~3-5 phut roi F5 trang web de test.
+echo ==========================================
+echo.
 pause
