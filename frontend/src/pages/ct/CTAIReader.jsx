@@ -1,6 +1,6 @@
 import React, { useState, useRef } from 'react'
 import { useOutletContext, useParams } from 'react-router-dom'
-import { Upload, FileText, Loader, CheckCircle, AlertCircle, Save, X, Plus, Trash2, RefreshCw } from 'lucide-react'
+import { Upload, FileText, Loader, CheckCircle, AlertCircle, Save, X, Plus, Trash2, RefreshCw, Bot, Zap } from 'lucide-react'
 import { docPhieu, createPhieu } from '../../api'
 
 function formatVND(n) {
@@ -19,6 +19,7 @@ export default function CTAIReader() {
 
   const [file, setFile] = useState(null)
   const [loai, setLoai] = useState('NK')
+  const [provider, setProvider] = useState('gemini') // 'gemini' | 'claude'
   const [loading, setLoading] = useState(false)
   const [result, setResult] = useState(null)
   const [error, setError] = useState(null)
@@ -49,6 +50,7 @@ export default function CTAIReader() {
     try {
       const fd = new FormData()
       fd.append('file', file)
+      fd.append('provider', provider)
       const res = await docPhieu(fd)
       const data = res.data
       setResult(data)
@@ -123,7 +125,7 @@ export default function CTAIReader() {
 
       {/* Upload + loai */}
       <div className="bg-white rounded-xl border border-gray-100 p-5">
-        <div className="flex gap-4 mb-4">
+        <div className="flex flex-wrap gap-4 mb-4">
           <div>
             <label className="text-xs text-gray-500 font-medium block mb-1">Loại phiếu</label>
             <div className="flex gap-2">
@@ -134,6 +136,19 @@ export default function CTAIReader() {
               <button onClick={() => setLoai('XK')}
                 className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${loai === 'XK' ? 'bg-orange-500 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}>
                 Xuất kho (XK)
+              </button>
+            </div>
+          </div>
+          <div>
+            <label className="text-xs text-gray-500 font-medium block mb-1">AI đọc phiếu</label>
+            <div className="flex gap-1 p-1 bg-gray-100 rounded-lg">
+              <button onClick={() => setProvider('gemini')}
+                className={"px-3 py-1.5 rounded-md text-xs font-medium transition-colors flex items-center gap-1.5 " + (provider === 'gemini' ? 'bg-white text-gray-800 shadow-sm' : 'text-gray-500 hover:text-gray-700')}>
+                🆓 Gemini <span className="text-green-600 font-semibold">Free</span>
+              </button>
+              <button onClick={() => setProvider('claude')}
+                className={"px-3 py-1.5 rounded-md text-xs font-medium transition-colors flex items-center gap-1.5 " + (provider === 'claude' ? 'bg-white text-gray-800 shadow-sm' : 'text-gray-500 hover:text-gray-700')}>
+                <Zap className="w-3 h-3 text-purple-500" /> Claude
               </button>
             </div>
           </div>
@@ -169,7 +184,9 @@ export default function CTAIReader() {
         >
           {loading
             ? <><Loader className="w-4 h-4 animate-spin" /> AI đang đọc phiếu...</>
-            : 'Đọc phiếu bằng AI'
+            : provider === 'gemini'
+              ? '🆓 Đọc phiếu bằng Gemini (Free)'
+              : <><Zap className="w-4 h-4" /> Đọc phiếu bằng Claude</>
           }
         </button>
         {loading && <p className="text-xs text-gray-400 text-center mt-2">Quá trình này mất 10-60 giây</p>}
@@ -185,9 +202,15 @@ export default function CTAIReader() {
       {/* Ket qua - cho sua truoc khi luu */}
       {result && (
         <div className="bg-white rounded-xl border border-gray-100 p-5 space-y-4">
-          <div className="flex items-center gap-2 text-teal-600">
-            <CheckCircle className="w-5 h-5" />
-            <span className="font-semibold">AI đọc xong — kiểm tra và xác nhận trước khi lưu</span>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2 text-teal-600">
+              <CheckCircle className="w-5 h-5" />
+              <span className="font-semibold">AI đọc xong — kiểm tra và xác nhận trước khi lưu</span>
+            </div>
+            {provider === 'gemini'
+              ? <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-green-50 text-green-700 text-xs font-medium rounded-full border border-green-100">🆓 Gemini Free</span>
+              : <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-purple-50 text-purple-600 text-xs font-medium rounded-full border border-purple-100"><Zap className="w-3 h-3" /> Claude Sonnet</span>
+            }
           </div>
 
           {/* Header phieu */}

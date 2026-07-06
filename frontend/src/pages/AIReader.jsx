@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react'
-import { Upload, FileText, Loader, CheckCircle, AlertCircle, Save, X, Bot } from 'lucide-react'
+import { Upload, FileText, Loader, CheckCircle, AlertCircle, Save, X, Bot, Zap } from 'lucide-react'
 import { docPhieu, createPhieu } from '../api'
 import { useCongTrinh } from '../context/CongTrinhContext'
 
@@ -21,6 +21,8 @@ export default function AIReader() {
   const [savedOk, setSavedOk] = useState(false)
   const [congTrinhId, setCongTrinhId] = useState(selectedCT?.id || '')
   const fileRef = useRef()
+
+  const [provider, setProvider] = useState('gemini') // 'gemini' | 'claude'
 
   // Drag & drop
   const [dragging, setDragging] = useState(false)
@@ -45,6 +47,7 @@ export default function AIReader() {
     try {
       const fd = new FormData()
       fd.append('file', file)
+      fd.append('provider', provider)
       const res = await docPhieu(fd)
       setResult(res.data)
     } catch (e) {
@@ -111,6 +114,24 @@ export default function AIReader() {
         <div className="bg-white rounded-xl border border-gray-100 p-6 space-y-4">
           <h3 className="font-semibold text-gray-800">1. Upload phiếu</h3>
 
+          {/* Chọn AI provider */}
+          <div>
+            <label className="text-xs text-gray-500 font-medium mb-1.5 block">AI đọc phiếu</label>
+            <div className="flex gap-1 p-1 bg-gray-100 rounded-lg">
+              <button onClick={() => setProvider('gemini')}
+                className={"flex-1 py-2 px-3 rounded-md text-xs font-medium transition-colors flex items-center justify-center gap-1.5 " + (provider === 'gemini' ? 'bg-white text-gray-800 shadow-sm' : 'text-gray-500 hover:text-gray-700')}>
+                🆓 Gemini <span className={provider === 'gemini' ? 'text-green-600 font-bold' : 'text-green-500'}>Free</span>
+              </button>
+              <button onClick={() => setProvider('claude')}
+                className={"flex-1 py-2 px-3 rounded-md text-xs font-medium transition-colors flex items-center justify-center gap-1.5 " + (provider === 'claude' ? 'bg-white text-gray-800 shadow-sm' : 'text-gray-500 hover:text-gray-700')}>
+                <Zap className="w-3.5 h-3.5 text-purple-500" /> Claude Sonnet
+              </button>
+            </div>
+            <p className="text-xs text-gray-400 mt-1">
+              {provider === 'gemini' ? '🆓 Miễn phí · Tốc độ nhanh · Phù hợp phiếu in rõ' : '⚡ Chính xác cao hơn · Phù hợp chữ viết tay, scan mờ'}
+            </p>
+          </div>
+
           {/* Chọn công trình */}
           <div>
             <label className="text-xs text-gray-500 font-medium mb-1.5 block">Công trình *</label>
@@ -160,7 +181,9 @@ export default function AIReader() {
           >
             {loading
               ? <><Loader className="w-4 h-4 animate-spin" /> AI đang đọc phiếu...</>
-              : <><Bot className="w-4 h-4" /> Đọc phiếu bằng AI</>
+              : provider === 'gemini'
+                ? <>🆓 Đọc phiếu bằng Gemini</>
+                : <><Bot className="w-4 h-4" /> Đọc phiếu bằng Claude</>
             }
           </button>
 
@@ -284,17 +307,21 @@ export default function AIReader() {
       {/* Hướng dẫn */}
       <div className="bg-blue-50 rounded-xl p-5 border border-blue-100">
         <h4 className="font-semibold text-blue-800 mb-3 text-sm">Hướng dẫn sử dụng AI Reader</h4>
-        <div className="grid grid-cols-3 gap-4 text-xs text-blue-700">
+        <div className="grid grid-cols-4 gap-4 text-xs text-blue-700">
           <div className="flex gap-2">
             <span className="w-5 h-5 rounded-full bg-blue-500 text-white flex items-center justify-center font-bold flex-shrink-0 text-[10px]">1</span>
-            <span>Chọn công trình cần nhập phiếu vào</span>
+            <span>Chọn AI: <b>Gemini</b> (miễn phí) hoặc <b>Claude</b> (chính xác cao hơn)</span>
           </div>
           <div className="flex gap-2">
             <span className="w-5 h-5 rounded-full bg-blue-500 text-white flex items-center justify-center font-bold flex-shrink-0 text-[10px]">2</span>
-            <span>Upload ảnh chụp hoặc file PDF phiếu nhập / xuất kho</span>
+            <span>Chọn công trình cần nhập phiếu vào</span>
           </div>
           <div className="flex gap-2">
             <span className="w-5 h-5 rounded-full bg-blue-500 text-white flex items-center justify-center font-bold flex-shrink-0 text-[10px]">3</span>
+            <span>Upload ảnh chụp hoặc file PDF phiếu nhập / xuất kho</span>
+          </div>
+          <div className="flex gap-2">
+            <span className="w-5 h-5 rounded-full bg-blue-500 text-white flex items-center justify-center font-bold flex-shrink-0 text-[10px]">4</span>
             <span>Kiểm tra kết quả AI đọc, sau đó nhấn "Xác nhận lưu phiếu"</span>
           </div>
         </div>

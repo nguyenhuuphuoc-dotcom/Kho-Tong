@@ -73,6 +73,11 @@ def get_chi_tiet_phieu(id: int):
 def create_phieu(body: PhieuCreate):
     """Tạo phiếu mới kèm chi tiết hàng hóa."""
     try:
+        # Kiểm tra trùng số phiếu trong cùng công trình
+        existing = db.select("phieu", filters=f"cong_trinh_id=eq.{body.cong_trinh_id}&so_phieu=eq.{body.so_phieu}")
+        if existing:
+            raise HTTPException(status_code=409, detail=f"Số phiếu '{body.so_phieu}' đã tồn tại trong công trình này")
+
         # Tính tổng tiền nếu chưa có
         tong_tien = body.tong_tien or 0
         if not tong_tien and body.items:
@@ -109,7 +114,7 @@ def create_phieu(body: PhieuCreate):
             action=f"create_{body.loai.lower()}",
             entity_type="phieu",
             entity_id=str(phieu_id),
-            details=f"{body.loai} {body.so_phieu} | {body.ngay} | {body.doi_tac or ''} | {body.tong_tien:,.0f} VND",
+            details=f"{body.loai} {body.so_phieu} | {body.ngay} | {body.doi_tac or ''} | {body.tong_tien or 0:,.0f} VND",
             user_email=body.user_email or "",
             cong_trinh_id=body.cong_trinh_id,
         )

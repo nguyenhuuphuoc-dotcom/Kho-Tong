@@ -69,6 +69,7 @@ export default function PhieuNhap() {
   const [aiLoading, setAiLoading] = useState(false)
   const [aiError, setAiError] = useState('')
   const [aiDragging, setAiDragging] = useState(false)
+  const [aiProvider, setAiProvider] = useState('gemini') // 'gemini' | 'claude'
   const aiRef = useRef()
 
   // Non-admin: luôn dùng CT được gán; Admin: dùng selectedCT (null = tất cả)
@@ -250,6 +251,7 @@ export default function PhieuNhap() {
     try {
       const fd = new FormData()
       fd.append('file', aiFile)
+      fd.append('provider', aiProvider)
       const res = await docPhieu(fd)
       const phieuData = res.data?.phieu || res.data || {}
       const aiItems = phieuData.items || phieuData.hang_hoa || []
@@ -513,6 +515,17 @@ export default function PhieuNhap() {
 
               {!editingPhieu && createMode === 'ai' && (
                 <div className="space-y-3">
+                  {/* Provider toggle */}
+                  <div className="flex gap-1 p-1 bg-gray-100 rounded-lg">
+                    <button onClick={() => setAiProvider('gemini')}
+                      className={"flex-1 py-1.5 px-3 rounded-md text-xs font-medium transition-colors flex items-center justify-center gap-1.5 " + (aiProvider === 'gemini' ? 'bg-white text-gray-800 shadow-sm' : 'text-gray-500 hover:text-gray-700')}>
+                      🆓 Gemini <span className="text-green-600 font-semibold">Free</span>
+                    </button>
+                    <button onClick={() => setAiProvider('claude')}
+                      className={"flex-1 py-1.5 px-3 rounded-md text-xs font-medium transition-colors flex items-center justify-center gap-1.5 " + (aiProvider === 'claude' ? 'bg-white text-gray-800 shadow-sm' : 'text-gray-500 hover:text-gray-700')}>
+                      <Bot className="w-3.5 h-3.5" /> Claude Sonnet
+                    </button>
+                  </div>
                   <div
                     className={"border-2 border-dashed rounded-xl p-6 text-center cursor-pointer transition-colors " + (aiDragging ? 'border-blue-400 bg-blue-50' : 'border-gray-200 hover:border-blue-300 hover:bg-blue-50')}
                     onClick={() => aiRef.current && aiRef.current.click()}
@@ -543,9 +556,10 @@ export default function PhieuNhap() {
                   </button>
                   <div className="flex items-center justify-center gap-1.5">
                     <span className="text-xs text-gray-400">Powered by</span>
-                    <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-purple-50 text-purple-600 text-xs font-medium rounded-full border border-purple-100">
-                      <Bot className="w-3 h-3" /> Claude Sonnet
-                    </span>
+                    {aiProvider === 'gemini'
+                      ? <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-green-50 text-green-700 text-xs font-medium rounded-full border border-green-100">🆓 Gemini 2.0 Flash</span>
+                      : <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-purple-50 text-purple-600 text-xs font-medium rounded-full border border-purple-100"><Bot className="w-3 h-3" /> Claude Sonnet</span>
+                    }
                   </div>
                 </div>
               )}

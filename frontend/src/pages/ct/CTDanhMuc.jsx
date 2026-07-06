@@ -23,6 +23,7 @@ export default function CTDanhMuc() {
   const [editMsg, setEditMsg]     = useState(null)
 
   const loadData = () => {
+    if (!realId) return
     setLoading(true)
     getHangHoa({ cong_trinh_id: realId, limit: 2000 })
       .then(res => setList(res.data?.data || []))
