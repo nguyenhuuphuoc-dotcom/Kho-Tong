@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import {
   Building2, Search, RefreshCw, MapPin, Hash, FileText,
-  Plus, Trash2, X, CheckCircle, XCircle, CheckCircle2, RotateCcw
+  Plus, Trash2, X, CheckCircle, XCircle, CheckCircle2, RotateCcw, AlertTriangle
 } from 'lucide-react'
 import { api, updateCongTrinhStatus } from '../api'
 import { useCongTrinh } from '../context/CongTrinhContext'
@@ -12,9 +12,10 @@ export default function CongTrinh() {
   const [loading, setLoading]   = useState(true)
   const [search, setSearch]     = useState('')
   const [showForm, setShowForm] = useState(false)
-  const [saving, setSaving]     = useState(false)
-  const [updating, setUpdating] = useState(null)  // id dang update trang thai
-  const [msg, setMsg]           = useState(null)
+  const [saving, setSaving]       = useState(false)
+  const [updating, setUpdating]   = useState(null)  // id dang update trang thai
+  const [msg, setMsg]             = useState(null)
+  const [deleteModal, setDeleteModal] = useState({ show: false, ct: null, loading: false, counts: null })
   const [form, setForm] = useState({ ten_ct: '', ma_ct: '', dia_chi: '', ghi_chu: '' })
 
   const loadData = () => {
@@ -55,14 +56,28 @@ export default function CongTrinh() {
     }
   }
 
-  const handleDelete = async (id, ten) => {
-    if (!window.confirm(`Xóa vĩnh viễn công trình: ${ten}?\nThao tác này không thể hoàn tác.`)) return
+  const handleDeleteClick = async (ct) => {
+    setDeleteModal({ show: true, ct, loading: true, counts: null })
     try {
-      await api.delete(`/cong-trinh/${id}`)
-      setMsg({ type: 'ok', text: `Đã xóa: ${ten}` })
+      const res = await api.get(`/cong-trinh/${ct.id}/stats`)
+      setDeleteModal(prev => ({ ...prev, loading: false, counts: res.data }))
+    } catch {
+      setDeleteModal(prev => ({ ...prev, loading: false }))
+    }
+  }
+
+  const handleDeleteConfirm = async () => {
+    const { ct } = deleteModal
+    if (!ct) return
+    setDeleteModal(prev => ({ ...prev, loading: true }))
+    try {
+      await api.delete(`/cong-trinh/${ct.id}`)
+      setMsg({ type: 'ok', text: `Đã xóa: ${ct.ten_ct}` })
+      setDeleteModal({ show: false, ct: null, loading: false, counts: null })
       loadData(); loadCongTrinh()
     } catch (err) {
       setMsg({ type: 'err', text: err.response?.data?.detail || 'Lỗi xóa công trình' })
+      setDeleteModal(prev => ({ ...prev, loading: false }))
     }
   }
 
@@ -198,7 +213,7 @@ export default function CongTrinh() {
 
                           {/* Nút xóa */}
                           <button
-                            onClick={() => handleDelete(ct.id, ct.ten_ct)}
+                            onClick={() => handleDeleteClick(ct)}
                             title="Xóa công trình"
                             className="p-1.5 hover:bg-red-50 text-gray-400 hover:text-red-500 rounded-lg transition-colors"
                           >
@@ -224,6 +239,71 @@ export default function CongTrinh() {
               })}
             </div>
       }
+
+      {/* Modal xác nhận xóa CT */}
+      {deleteModal.show && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-md p-6">
+            <div className="flex items-start gap-4 mb-5">
+              <div className="w-10 h-10 bg-red-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                <AlertTriangle className="w-5 h-5 text-red-600" />
+              </div>
+              <div>
+                <h3 className="font-bold text-gray-800 text-lg">Xóa công trình</h3>
+                <p className="text-sm text-gray-500 mt-0.5 font-mono">{deleteModal.ct?.ma_ct} — {deleteModal.ct?.ten_ct}</p>
+              </div>
+            </div>
+
+            <div className="bg-red-50 border border-red-100 rounded-xl p-4 mb-4">
+              <p className="text-sm font-semibold text-red-700">
+                ⚠️ Bạn có chắc chắn muốn xóa công trình này?
+              </p>
+              <p className="text-sm text-red-600 mt-1">
+                Toàn bộ dữ liệu sẽ bị xóa vĩnh viễn và không thể khôi phục.
+              </p>
+            </div>
+
+            {deleteModal.loading && !deleteModal.counts && (
+              <p className="text-sm text-gray-400 text-center py-3">Đang kiểm tra dữ liệu...</p>
+            )}
+
+            {deleteModal.counts && (
+              <div className="bg-gray-50 rounded-xl p-4 mb-4 space-y-2">
+                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Dữ liệu sẽ bị xóa:</p>
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-600">Phiếu nhập / xuất</span>
+                  <span className="font-bold text-gray-800">{deleteModal.counts.phieu_count} phiếu</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-600">Chi tiết phiếu</span>
+                  <span className="font-bold text-gray-800">{deleteModal.counts.chi_tiet_count} dòng</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-600">Danh mục hàng hóa</span>
+                  <span className="font-bold text-gray-800">{deleteModal.counts.hang_hoa_count} mặt hàng</span>
+                </div>
+              </div>
+            )}
+
+            <div className="flex gap-3 mt-2">
+              <button
+                onClick={() => setDeleteModal({ show: false, ct: null, loading: false, counts: null })}
+                disabled={deleteModal.loading && !!deleteModal.counts}
+                className="flex-1 py-2.5 border border-gray-200 text-gray-600 rounded-xl text-sm hover:bg-gray-50 disabled:opacity-50"
+              >
+                Hủy
+              </button>
+              <button
+                onClick={handleDeleteConfirm}
+                disabled={deleteModal.loading}
+                className="flex-1 py-2.5 bg-red-500 text-white rounded-xl text-sm font-semibold hover:bg-red-600 disabled:opacity-50 transition-colors"
+              >
+                {deleteModal.loading && deleteModal.counts ? 'Đang xóa...' : 'Xóa vĩnh viễn'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Modal tạo CT */}
       {showForm && (
