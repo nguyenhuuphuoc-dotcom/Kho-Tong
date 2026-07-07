@@ -36,7 +36,7 @@ Chỉ 2 vai trò: **admin** (toàn quyền) và **user = NV thủ kho** (chỉ t
 
 ```
 CLAUDE_API_KEY=sk-ant-api03-...
-GEMINI_API_KEY=AQ.Ab8RN6IFEdbdht1WmOjNvLlhqKkQs6sEQEHB7pKjhKCzxkPjTg
+GEMINI_API_KEY=<your-gemini-api-key>
 GEMINI_MODEL=gemini-1.5-flash   ← đọc từ đây, KHÔNG hard-code
 JWT_SECRET=hpcons-apptong-secret-2026-!@#
 SETUP_KEY=HPCONS_SETUP_2026
